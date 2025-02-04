@@ -4,6 +4,7 @@
   <CreateDate>2025-02-04T15:19:20.3325411+02:00</CreateDate>
   <ProductVersion>8.1.2.0</ProductVersion>
   <Mdm>false</Mdm>
+  <ProjectHasDiagramBinFiles>false</ProjectHasDiagramBinFiles>
   <DataChangeIndicators>
     <DataChange name="Search" enabled="true">
       <Options>
