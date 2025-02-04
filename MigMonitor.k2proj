@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>MigMonitor</Name>
+  <CreateDate>2025-02-04T15:19:20.3325411+02:00</CreateDate>
+  <ProductVersion>8.1.2.0</ProductVersion>
+  <Mdm>false</Mdm>
+  <DataChangeIndicators>
+    <DataChange name="Search" enabled="true">
+      <Options>
+        <option>keyword</option>
+        <option>data</option>
+        <option>date</option>
+      </Options>
+    </DataChange>
+  </DataChangeIndicators>
+</Project>
