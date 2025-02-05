@@ -1,0 +1,44 @@
+stages:
+  Stage 1:
+    actors:
+      Random List Length:
+        parent: RandomNumber
+        in:
+          minimum:
+            const: 100
+          maximum:
+            const: 200
+  Stage 2:
+    actors:
+      For Loop:
+        parent: ForLoop
+        in:
+          from:
+            const: 1
+          to:
+            link: Random List Length/value
+  Stage 3:
+    actors:
+      StringFormat1:
+        parent: StringFormat
+        in:
+          format:
+            const: '''${idVal}'''
+          idVal:
+            link:
+              path: For Loop/i
+              iterate: Iterate
+            schema: integer
+            mandatory: false
+  Stage 4:
+    actors:
+      Id List Build:
+        parent: StringBuild
+        in:
+          input:
+            link:
+              path: StringFormat1/string
+              pos: 0
+        out:
+          string:
+            external: idList

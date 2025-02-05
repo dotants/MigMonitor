@@ -1,6 +1,24 @@
 stages:
-  Stage 1:
+  Stage 4:
     actors:
+      get EXEC_ID:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.EXEC_ID
+            default: false
+  New Exec_ID:
+    dependsOn: Stage 4
+    actors:
+      EXEC_ID is -1:
+        parent: Equals
+        condition: result
+        in:
+          b:
+            const: '-1'
+            schema: string
+          a:
+            link: get EXEC_ID/result
       Gen Exec Id:
         parent: RandomNumber
         in:
@@ -11,3 +29,18 @@ stages:
         out:
           value:
             external: execId
+    split: '--------------------'
+  Use Existing:
+    else: true
+    dependsOn: Stage 4
+    actors:
+      Use Existing EXEC_ID:
+        parent: Const
+        in:
+          value:
+            const: null
+            link: get EXEC_ID/result
+        out:
+          value:
+            external: execId
+            schema: string

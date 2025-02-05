@@ -32,8 +32,8 @@ public class Logic extends WebServiceUserCode {
 
 
 	@webService(path = "", verb = {MethodType.GET, MethodType.POST, MethodType.PUT, MethodType.DELETE}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
-	public static Object wsExtractStatus() throws Exception {
-		return fabric().fetch("broadway MigDummy.extractStatus");
+	public static Object wsExtractStatus(@param(required=true) String execId) throws Exception {
+		return fabric().fetch("broadway MigDummy.extractStatus execId='"+execId+"'");
 	}
 
 
@@ -51,13 +51,13 @@ public class Logic extends WebServiceUserCode {
 
 	@desc("Get Execution Id value")
 	@webService(path = "", verb = {MethodType.GET, MethodType.POST, MethodType.PUT, MethodType.DELETE}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
-	public static Long wsExecId() throws Exception {
-		Long execId = Long.valueOf(0);
+	public static String wsExecId() throws Exception {
+		String execId = "";
 		
 		Db.Rows rows = fabric().fetch("broadway MigDummy.getMigExecId");
 		
 		for (Db.Row row:rows) {
-			execId = (Long)row.cell(0);
+			execId = (String)row.cell(0);
 			break;
 		}
 		

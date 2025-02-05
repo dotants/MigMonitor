@@ -1,0 +1,81 @@
+stages:
+  Stage 1:
+    actors:
+      Initialize EXEC_ID:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.EXEC_ID=-1'
+      'getMigExecId: InnerFlow':
+        parent: InnerFlow
+        in:
+          flowName:
+            const: getMigExecId
+        out:
+          execId:
+            schema: integer
+  Stage 2:
+    actors:
+      Set new EXEC_ID:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.EXEC_ID=${@execId}'
+          execId:
+            link: 'getMigExecId: InnerFlow/execId'
+            schema: integer
+            mandatory: false
+      genIdList:
+        parent: InnerFlow
+        in:
+          flowName:
+            const: genIdList
+        out:
+          idList:
+            schema: string
+  Stage 3:
+    actors:
+      Batch Command:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: BATCH MigDummy.(${@idList}) FABRIC_COMMAND="broadway MigDummy.dummyEntOrch
+              exec_id=${@execId} iid=?" WITH ASYNC=true
+          idList:
+            link: genIdList/idList
+            schema: string
+            mandatory: false
+          execId:
+            link: 'getMigExecId: InnerFlow/execId'
+            schema: integer
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+  Stage 4:
+    actors:
+      Batch Wait:
+        parent: BatchWait
+        in:
+          batchId:
+            link:
+              path: Batch Command/result/Batch id
+              iterate: First
+schemas:
+  Batch Command.out.result:
+    type: array
+    items:
+      type: object
+      properties:
+        Batch id:
+          type: string
+        Execution id:
+          type: string
+        Notes:
+          type: string

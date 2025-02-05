@@ -1,0 +1,48 @@
+stages:
+  Stage 1:
+    actors:
+      Random Duration in milisec:
+        parent: RandomNumber
+        in:
+          minimum:
+            const: 5000
+          maximum:
+            const: 8000
+  Stage 2:
+    actors:
+      Last 2 Digits:
+        parent: Substring
+        in:
+          begin:
+            const: 2
+          end:
+            const: 4
+          string:
+            link: Random Duration in milisec/value
+  Stage 3:
+    actors:
+      ToNumber1:
+        parent: ToNumber
+        in:
+          value:
+            link: Last 2 Digits/string
+  Stage 4:
+    actors:
+      assertNotEquals1:
+        parent: assertNotEquals
+        in:
+          unexpected:
+            const: 67
+            schema: integer
+          delta:
+            const: 2
+          message:
+            const: Simulating an exception failure in entity orchestration
+          actual:
+            link: ToNumber1/number
+      Dummy extract / validations:
+        parent: Sleep
+        in:
+          millis:
+            const: null
+            link: Random Duration in milisec/value

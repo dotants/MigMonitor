@@ -1,51 +1,193 @@
 stages:
   Stage 1:
     actors:
-      execStatus:
-        parent: Const
+      ErrorHandler1:
+        parent: ErrorHandler
+        error: result
         in:
-          value:
-            const: running
+          config:
+            const:
+            - exceptionKey: java.lang.Exception
+              conditions:
+                message: ''
+              actions:
+                suppress: true
+                log: false
+                flowName: ''
+                number_of_retries: ''
+                retry_interval: ''
+      batch_list:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: batch_list STATUS='ALL' FILTER='MigDummy.dummyEntOrch exec_id=${@execId}'
+          execId:
+            external: execId
             schema: string
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+  Stage 4:
+    actors:
+      Batch Id exists:
+        parent: NotNull
+        condition: result
+        in:
+          value:
+            link:
+              path: batch_list/result/Id
+              iterate: First
+      batch_info:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: batch_info ${bid}
+          bid:
+            link:
+              path: batch_list/result/Id
+              iterate: First
+            schema: string
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+      JavaScript1:
+        parent: JavaScript
+        in:
+          script:
+            const: |-
+              var mtKey = { "batch status" : batchStatus};
+
+              mtKey;
+          batchStatus:
+            link:
+              path: batch_list/result/Status
+              iterate: First
+            schema: string
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+  Stage 7:
+    last: 1
+    actors:
+      Is Max workers per node?:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: Max no. workers per node
+            schema: string
+          a:
+            link:
+              path: batch_info/result/key
+              iterate: Iterate
+      MAX_WORKERS_PER_NODE:
+        parent: Const
+        in:
+          value:
+            const: null
+            link:
+              path: batch_info/result/value
+              iterate: Iterate
         out:
           value:
             schema: string
-      completedCount:
-        parent: Const
+      max workers found, Loop Stop:
+        parent: LoopStop
+  Stage 6:
+    actors:
+      batch_summary:
+        parent: DbCommand
         in:
-          value:
-            const: 34
-            schema: integer
+          interface:
+            const: fabric
+          sql:
+            const: batch_summary ${bid}
+          bid:
+            link:
+              path: batch_list/result/Id
+              iterate: First
+            schema: string
+            mandatory: false
         out:
-          value:
-            schema: integer
-      rejectedCount:
-        parent: Const
+          result:
+            schema: '#ref'
+      mtMonitorBatchStatus:
+        parent: MTableLookup
         in:
-          value:
-            const: 3
-            schema: integer
+          mtable:
+            const: mtMonitorBatchStatus
+          mtableKey:
+            const: null
+            link: JavaScript1/result
         out:
-          value:
-            schema: integer
-      inProccount:
-        parent: Const
+          result:
+            schema: '#ref'
+  Stage 5:
+    actors:
+      Is Cluster Level?:
+        parent: EqualsIgnoreCase
+        condition: result
         in:
-          value:
-            const: 8
-            schema: integer
-        out:
-          value:
-            schema: integer
-      pendingCount:
-        parent: Const
+          b:
+            const: Cluster
+            schema: string
+          a:
+            link:
+              path: batch_summary/result/Level
+              iterate: Iterate
+      In-Proc calc:
+        parent: JavaScript
         in:
-          value:
-            const: 51
+          script:
+            const: |-
+              if ( parseInt(remaining) > parseInt(maxWorkers) ) {
+                  maxWorkers;
+              } else {
+                  remaining;
+              }
+          remaining:
+            link:
+              path: batch_summary/result/Remaining
+              iterate: Iterate
             schema: integer
+            mandatory: false
+          maxWorkers:
+            link: MAX_WORKERS_PER_NODE/value
+            schema: string
+            mandatory: false
         out:
-          value:
+          result:
+            schema: string
+      Pending calc:
+        parent: JavaScript
+        in:
+          script:
+            const: |-
+              if ( parseInt(remaining) > parseInt(maxWorkers) ) {
+                  parseInt(remaining) - parseInt(maxWorkers);
+              } else {
+                  0;
+              }
+          remaining:
+            link:
+              path: batch_summary/result/Remaining
+              iterate: Iterate
             schema: integer
+            mandatory: false
+          maxWorkers:
+            link: MAX_WORKERS_PER_NODE/value
+            schema: string
+            mandatory: false
+        out:
+          result:
+            schema: string
   Stage 2:
     actors:
       Create Output Structure:
@@ -58,23 +200,29 @@ stages:
               : \"${inProcCount}\",\r\n         \"pending\": \"${pendingCount}\"\r\
               \n      }"
           execStatus:
-            link: execStatus/value
+            link:
+              path: mtMonitorBatchStatus/result/monitor status
+              iterate: First
             schema: string
             mandatory: false
           completedCount:
-            link: completedCount/value
+            link:
+              path: batch_summary/result/Succeeded
+              iterate: Iterate
             schema: integer
             mandatory: false
           rejectedCount:
-            link: rejectedCount/value
+            link:
+              path: batch_summary/result/Failed
+              iterate: Iterate
             schema: integer
             mandatory: false
           inProcCount:
-            link: inProccount/value
+            link: In-Proc calc/result
             schema: integer
             mandatory: false
           pendingCount:
-            link: pendingCount/value
+            link: Pending calc/result
             schema: integer
             mandatory: false
   Stage 3:
@@ -88,7 +236,88 @@ stages:
           object:
             external: extractStatus
             schema: '#ref'
+      Cluster level found, Loop Stop:
+        parent: LoopStop
 schemas:
+  batch_list.out.result:
+    type: array
+    items:
+      type: object
+      properties:
+        Id:
+          type: string
+        Status:
+          type: string
+        Start date:
+          type: date
+        Completion %:
+          type: string
+        End date:
+          type: date
+        Fabric command:
+          type: string
+        Created by:
+          type: string
+        Execution id:
+          type: string
+        Error:
+          type: string
+  batch_info.out.result:
+    type: array
+    items:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+  JavaScript1.out.result:
+    type: object
+    properties:
+      batch status:
+        type: string
+  batch_summary.out.result:
+    type: array
+    items:
+      type: object
+      properties:
+        Level:
+          type: string
+        Name:
+          type: string
+        Status:
+          type: string
+        Start time:
+          type: string
+        End time:
+          type: string
+        Duration:
+          type: string
+        Remaining dur.:
+          type: string
+        Remaining:
+          type: string
+        Total:
+          type: string
+        Succeeded:
+          type: string
+        Failed:
+          type: string
+        '% Completed':
+          type: string
+        Ent./sec (pace):
+          type: string
+        Ent./sec (avg.):
+          type: string
+  mtMonitorBatchStatus.out.result:
+    type: array
+    items:
+      type: object
+      properties:
+        batch status:
+          type: string
+        monitor status:
+          type: string
   Convert T o Object.out.object:
     type: object
     properties:
