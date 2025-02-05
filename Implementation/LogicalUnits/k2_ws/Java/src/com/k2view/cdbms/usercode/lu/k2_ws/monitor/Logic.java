@@ -48,6 +48,22 @@ public class Logic extends WebServiceUserCode {
 		return mtData;
 	}
 
+
+	@desc("Get Execution Id value")
+	@webService(path = "", verb = {MethodType.GET, MethodType.POST, MethodType.PUT, MethodType.DELETE}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	public static Long wsExecId() throws Exception {
+		Long execId = Long.valueOf(0);
+		
+		Db.Rows rows = fabric().fetch("broadway MigDummy.getMigExecId");
+		
+		for (Db.Row row:rows) {
+			execId = (Long)row.cell(0);
+			break;
+		}
+		
+		return execId;
+	}
+
 	
 	
 

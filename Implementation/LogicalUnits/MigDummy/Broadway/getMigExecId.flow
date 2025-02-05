@@ -1,0 +1,13 @@
+stages:
+  Stage 1:
+    actors:
+      Gen Exec Id:
+        parent: RandomNumber
+        in:
+          minimum:
+            const: 3
+          maximum:
+            const: 200
+        out:
+          value:
+            external: execId
