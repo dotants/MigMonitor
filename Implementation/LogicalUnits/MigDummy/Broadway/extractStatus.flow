@@ -1,0 +1,106 @@
+stages:
+  Stage 1:
+    actors:
+      execStatus:
+        parent: Const
+        in:
+          value:
+            const: running
+            schema: string
+        out:
+          value:
+            schema: string
+      completedCount:
+        parent: Const
+        in:
+          value:
+            const: 34
+            schema: integer
+        out:
+          value:
+            schema: integer
+      rejectedCount:
+        parent: Const
+        in:
+          value:
+            const: 3
+            schema: integer
+        out:
+          value:
+            schema: integer
+      inProccount:
+        parent: Const
+        in:
+          value:
+            const: 8
+            schema: integer
+        out:
+          value:
+            schema: integer
+      pendingCount:
+        parent: Const
+        in:
+          value:
+            const: 51
+            schema: integer
+        out:
+          value:
+            schema: integer
+  Stage 2:
+    actors:
+      Create Output Structure:
+        parent: StringFormat
+        in:
+          format:
+            const: "      { \r\n         \"name\": \"Extract\",\r\n         \"status\"\
+              \ : \"${execStatus}\",\r\n         \"completed\": \"${completedCount}\"\
+              ,\r\n         \"rejected\": \"${rejectedCount}\",\r\n         \"in process\"\
+              : \"${inProcCount}\",\r\n         \"pending\": \"${pendingCount}\"\r\
+              \n      }"
+          execStatus:
+            link: execStatus/value
+            schema: string
+            mandatory: false
+          completedCount:
+            link: completedCount/value
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: rejectedCount/value
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: inProccount/value
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: pendingCount/value
+            schema: integer
+            mandatory: false
+  Stage 3:
+    actors:
+      Convert T o Object:
+        parent: JsonParser
+        in:
+          stream:
+            link: Create Output Structure/string
+        out:
+          object:
+            external: extractStatus
+            schema: '#ref'
+schemas:
+  Convert T o Object.out.object:
+    type: object
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+      completed:
+        type: string
+      rejected:
+        type: string
+      in process:
+        type: string
+      pending:
+        type: string
