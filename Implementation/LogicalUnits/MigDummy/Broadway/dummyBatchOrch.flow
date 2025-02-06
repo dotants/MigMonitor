@@ -37,6 +37,8 @@ stages:
         out:
           idList:
             schema: string
+          listLength:
+            schema: integer
   Stage 3:
     actors:
       Batch Command:

@@ -1,6 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ProjectItemsProperties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>ItemsProperties</Name>
-  <ProjectItemPropList />
-  <ProjectItemsCategoryList />
+  <ProjectItemPropList>
+    <ProjectItemProp>
+      <NodeName>dummyEntOrch.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\dummyEntOrch.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>dummyBatchOrch.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\dummyBatchOrch.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+  </ProjectItemPropList>
+  <ProjectItemsCategoryList>
+    <ProjectItemsCategory>
+      <Name>dummyMigFlows</Name>
+      <Key>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</Key>
+    </ProjectItemsCategory>
+  </ProjectItemsCategoryList>
 </ProjectItemsProperties>

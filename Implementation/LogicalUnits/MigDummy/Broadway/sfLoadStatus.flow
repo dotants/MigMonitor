@@ -1,0 +1,117 @@
+stages:
+  Stage 1: {
+    }
+  Stage 2: {
+    }
+  Stage 3: {
+    }
+  Stage 4:
+    actors:
+      Create Output Structure:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"SF Load\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\",\r\n    \"subProcesses\": [ \
+              \ \r\n       { \"name\": \"SF Customer\",\r\n         \"status\": \"\
+              ${custLoadStatus}\",\r\n         \"completed\": \"${custCompCount}\"\
+              ,\r\n         \"rejected\": \"${custRejectedCount}\",\r\n         \"\
+              in process\": \"${custInProcCount}\",\r\n         \"pending\": \"${custPendingCount}\"\
+              ,\r\n       },\r\n       { \"name\": \"SF Account\",\r\n         \"\
+              status\": \"${accntLoadStatus}\",\r\n         \"completed\": \"${accntCompCount}\"\
+              ,\r\n         \"rejected\": \"${acctRejectedCount}\",\r\n         \"\
+              in process\": \"${accntInProcCount}\",\r\n         \"pending\": \"${accntPendingCount}\"\
+              ,\r\n       },\r\n       { \"name\": \"SF Address\",\r\n         \"\
+              status\": \"${adrsLoadStatus}\",\r\n         \"completed\": \"${adrsCompCount}\"\
+              ,\r\n         \"rejected\": \"${adrsRejectedCount}\",\r\n         \"\
+              in process\": \"${adrsInProcCount}\",\r\n         \"pending\": \"${adrsPendingCount}\"\
+              ,\r\n       }\r\n    ]\r\n}"
+          execStatus:
+            schema: string
+            mandatory: false
+          completedCount:
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            schema: integer
+            mandatory: false
+          inProcCount:
+            schema: integer
+            mandatory: false
+          pendingCount:
+            schema: integer
+            mandatory: false
+          custLoadStatus:
+            schema: any
+            mandatory: false
+          accntLoadStatus:
+            schema: any
+            mandatory: false
+          adrsLoadStatus:
+            schema: any
+            mandatory: false
+          custCompCount:
+            schema: any
+            mandatory: false
+          accntCompCount:
+            schema: any
+            mandatory: false
+          adrsCompCount:
+            schema: any
+            mandatory: false
+          custRejectedCount:
+            schema: any
+            mandatory: false
+          acctRejectedCount:
+            schema: any
+            mandatory: false
+          adrsRejectedCount:
+            schema: any
+            mandatory: false
+          custInProcCount:
+            schema: any
+            mandatory: false
+          accntInProcCount:
+            schema: any
+            mandatory: false
+          adrsInProcCount:
+            schema: any
+            mandatory: false
+          custPendingCount:
+            schema: any
+            mandatory: false
+          accntPendingCount:
+            schema: any
+            mandatory: false
+          adrsPendingCount:
+            schema: any
+            mandatory: false
+  Stage 5:
+    actors:
+      Convert T o Object:
+        parent: JsonParser
+        in:
+          stream:
+            link: Create Output Structure/string
+        out:
+          object:
+            external: sfLoadStatus
+            schema: '#ref'
+schemas:
+  Convert T o Object.out.object:
+    type: object
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+      completed:
+        type: string
+      rejected:
+        type: string
+      in process:
+        type: string
+      pending:
+        type: string

@@ -8,6 +8,9 @@ stages:
             const: 100
           maximum:
             const: 200
+        out:
+          value:
+            external: listLength
   Stage 2:
     actors:
       For Loop:

@@ -1,0 +1,513 @@
+stages:
+  Stage 1:
+    actors:
+      While1:
+        parent: While
+        in:
+          script:
+            const: '1'
+        out:
+          result:
+            schema: '#ref'
+  Stage 2:
+    actors:
+      dummy:
+        parent: Const
+        in:
+          value:
+            const: null
+            link:
+              path: While1/result
+              iterate: Iterate
+        out:
+          value:
+            schema: integer
+      Current time:
+        parent: Now
+  Stage 6:
+    actors:
+      JavaScript1:
+        parent: JavaScript
+        in:
+          script:
+            const:
+              userCode: |+
+                if ( contextLoop.index() == 0 ) {
+                    self.startTime = currentTime;
+                    self.currTime = currentTime;
+                    self.currentStatus = { EXEC_STATUS:"running",
+                                           COMPLETED: 0,
+                                           REJECTED: 0,
+                                           IN_PROCE: 8,
+                                           PENDING: noOfCust,
+                                           CUST_EXEC_STATUS:"running",
+                                           CUST_COMPLETED: 0,
+                                           CUST_REJECTED: 0,
+                                           CUST_IN_PROCE: 8,
+                                           CUST_PENDING: noOfCust,
+                                           ACNT_EXEC_STATUS:"running",
+                                           ACNT_COMPLETED: 0,
+                                           ACNT_REJECTED: 0,
+                                           ACNT_IN_PROCE: 8,
+                                           ACNT_PENDING: noOfCust*2,
+                                           ADRS_EXEC_STATUS:"running",
+                                           ADRS_COMPLETED: 0,
+                                           ADRS_REJECTED: 0,
+                                           ADRS_IN_PROCE: 8,
+                                           ADRS_PENDING: noOfCust*3
+                                           };
+                }
+
+                // Assisting variables
+                var secondsSinceStart = (currentTime-self.startTime)/1000;
+                var completedCustomers = Math.floor(secondsSinceStart/10);
+                var completedAccounts = Math.floor(secondsSinceStart/12);
+                var completedAddress = Math.floor(secondsSinceStart/9);
+                var completed = Math.min( completedCustomers, Math.floor(completedAccounts/2) , Math.floor(completedAddress/3));
+                var pending = Math.max(0, noOfCust - completed);
+
+                // Process level update
+                if ( completed < noOfCust ) {
+                    self.currentStatus.COMPLETED = completed;
+                    self.currentStatus.PENDING = pending;
+                } else {
+                    self.currentStatus.EXEC_STATUS = "completed";
+                    self.currentStatus.COMPLETED = noOfCust;
+                    self.currentStatus.IN_PROCE = 0;
+                    self.currentStatus.PENDING = 0;
+                }
+
+                // Customer level update
+                if ( completedCustomers < noOfCust ) {
+                    self.currentStatus.CUST_COMPLETED = completedCustomers;
+                    self.currentStatus.CUST_PENDING = noOfCust - completedCustomers;
+                } else {
+                    self.currentStatus.CUST_EXEC_STATUS = "completed";
+                    self.currentStatus.CUST_COMPLETED = noOfCust;
+                    self.currentStatus.CUST_IN_PROCE = 0;
+                    self.currentStatus.CUST_PENDING = 0;
+                }
+
+                // Account level update
+                if ( completedAccounts < (noOfCust*2) ) {
+                    self.currentStatus.ACNT_COMPLETED = completedAccounts;
+                    self.currentStatus.ACNT_PENDING = (noOfCust*2) - completedAccounts;
+                } else {
+                    self.currentStatus.ACNT_EXEC_STATUS = "completed";
+                    self.currentStatus.ACNT_COMPLETED = noOfCust*2;
+                    self.currentStatus.ACNT_IN_PROCE = 0;
+                    self.currentStatus.ACNT_PENDING = 0;
+                }
+
+                // Address level update
+                if ( completedAddress < (noOfCust*3) ) {
+                    self.currentStatus.ADRS_COMPLETED = completedAddress;
+                    self.currentStatus.ADRS_PENDING = (noOfCust*3) - completedAddress;
+                } else {
+                    self.currentStatus.ADRS_EXEC_STATUS = "completed";
+                    self.currentStatus.ADRS_COMPLETED = noOfCust*3;
+                    self.currentStatus.ADRS_IN_PROCE = 0;
+                    self.currentStatus.ADRS_PENDING = 0;
+                }
+
+                // Check if entire process is completed
+                if ( self.currentStatus.CUST_EXEC_STATUS == "completed" &&
+                     self.currentStatus.ACNT_EXEC_STATUS == "completed" &&
+                     self.currentStatus.ADRS_EXEC_STATUS == "completed" ) {
+                         self.currentStatus.EXEC_STATUS = "completed";
+                     }
+
+                self.currentStatus;
+
+
+              script: |-
+                if (contextLoop.index() == 0) {
+                  self.startTime = currentTime;
+                  self.currTime = currentTime;
+                  self.currentStatus = {
+                    EXEC_STATUS: "running",
+                    COMPLETED: 0,
+                    REJECTED: 0,
+                    IN_PROCE: 8,
+                    PENDING: noOfCust,
+                    CUST_EXEC_STATUS: "running",
+                    CUST_COMPLETED: 0,
+                    CUST_REJECTED: 0,
+                    CUST_IN_PROCE: 8,
+                    CUST_PENDING: noOfCust,
+                    ACNT_EXEC_STATUS: "running",
+                    ACNT_COMPLETED: 0,
+                    ACNT_REJECTED: 0,
+                    ACNT_IN_PROCE: 8,
+                    ACNT_PENDING: noOfCust * 2,
+                    ADRS_EXEC_STATUS: "running",
+                    ADRS_COMPLETED: 0,
+                    ADRS_REJECTED: 0,
+                    ADRS_IN_PROCE: 8,
+                    ADRS_PENDING: noOfCust * 3
+                  };
+                } // Assisting variables
+
+
+                var secondsSinceStart = (currentTime - self.startTime) / 1000;
+                var completedCustomers = Math.floor(secondsSinceStart / 10);
+                var completedAccounts = Math.floor(secondsSinceStart / 12);
+                var completedAddress = Math.floor(secondsSinceStart / 9);
+                var completed = Math.min(completedCustomers, Math.floor(completedAccounts / 2), Math.floor(completedAddress / 3));
+                var pending = Math.max(0, noOfCust - completed); // Process level update
+
+                if (completed < noOfCust) {
+                  self.currentStatus.COMPLETED = completed;
+                  self.currentStatus.PENDING = pending;
+                } else {
+                  self.currentStatus.EXEC_STATUS = "completed";
+                  self.currentStatus.COMPLETED = noOfCust;
+                  self.currentStatus.IN_PROCE = 0;
+                  self.currentStatus.PENDING = 0;
+                } // Customer level update
+
+
+                if (completedCustomers < noOfCust) {
+                  self.currentStatus.CUST_COMPLETED = completedCustomers;
+                  self.currentStatus.CUST_PENDING = noOfCust - completedCustomers;
+                } else {
+                  self.currentStatus.CUST_EXEC_STATUS = "completed";
+                  self.currentStatus.CUST_COMPLETED = noOfCust;
+                  self.currentStatus.CUST_IN_PROCE = 0;
+                  self.currentStatus.CUST_PENDING = 0;
+                } // Account level update
+
+
+                if (completedAccounts < noOfCust * 2) {
+                  self.currentStatus.ACNT_COMPLETED = completedAccounts;
+                  self.currentStatus.ACNT_PENDING = noOfCust * 2 - completedAccounts;
+                } else {
+                  self.currentStatus.ACNT_EXEC_STATUS = "completed";
+                  self.currentStatus.ACNT_COMPLETED = noOfCust * 2;
+                  self.currentStatus.ACNT_IN_PROCE = 0;
+                  self.currentStatus.ACNT_PENDING = 0;
+                } // Address level update
+
+
+                if (completedAddress < noOfCust * 3) {
+                  self.currentStatus.ADRS_COMPLETED = completedAddress;
+                  self.currentStatus.ADRS_PENDING = noOfCust * 3 - completedAddress;
+                } else {
+                  self.currentStatus.ADRS_EXEC_STATUS = "completed";
+                  self.currentStatus.ADRS_COMPLETED = noOfCust * 3;
+                  self.currentStatus.ADRS_IN_PROCE = 0;
+                  self.currentStatus.ADRS_PENDING = 0;
+                } // Check if entire process is completed
+
+
+                if (self.currentStatus.CUST_EXEC_STATUS == "completed" && self.currentStatus.ACNT_EXEC_STATUS == "completed" && self.currentStatus.ADRS_EXEC_STATUS == "completed") {
+                  self.currentStatus.EXEC_STATUS = "completed";
+                }
+
+                self.currentStatus;
+          noOfCust:
+            external: noOfCust
+            schema: integer
+            mandatory: false
+          currentTime:
+            link: Current time/timestamp
+            schema: integer
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+  Stage 3:
+    actors:
+      SF_LOAD_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_LOAD_EXEC_STATUS=${@procStatus}'
+          procStatus:
+            link: JavaScript1/result/EXEC_STATUS
+            schema: string
+            mandatory: false
+      SF_LOAD_COMPLETED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_LOAD_COMPLETED=${@completed}'
+          completed:
+            link: JavaScript1/result/COMPLETED
+            schema: integer
+            mandatory: false
+      SF_LOAD_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_LOAD_REJECTED=${@rejected}'
+          rejected:
+            link: JavaScript1/result/REJECTED
+            schema: integer
+            mandatory: false
+      SF_LOAD_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_LOAD_IN_PROC=${@inProc}'
+          inProc:
+            link: JavaScript1/result/IN_PROCE
+            schema: integer
+            mandatory: false
+      SF_LOAD_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_LOAD_PENDING=${@pending}'
+          pending:
+            link: JavaScript1/result/PENDING
+            schema: integer
+            mandatory: false
+      SF_CUST_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_CUST_EXEC_STATUS=${@custExecStatus}'
+          custExecStatus:
+            link: JavaScript1/result/CUST_EXEC_STATUS
+            schema: any
+            mandatory: false
+      SF_CUST_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_CUST_COMPLET=${@custComplete}'
+          custComplete:
+            link: JavaScript1/result/CUST_COMPLETED
+            schema: any
+            mandatory: false
+      SF_CUST_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_CUST_REJECTED=${@custRejected}'
+          custRejected:
+            link: JavaScript1/result/CUST_REJECTED
+            schema: any
+            mandatory: false
+      SF_CUST_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_CUST_IN_PROC=${@custInProc}'
+          custInProc:
+            link: JavaScript1/result/CUST_IN_PROCE
+            schema: any
+            mandatory: false
+      SF_CUST_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_CUST_PENDING=${@custPending}'
+          custPending:
+            link: JavaScript1/result/CUST_PENDING
+            schema: any
+            mandatory: false
+  Stage 7:
+    actors:
+      SF_ACNT_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ACNT_EXEC_STATUS=${@acntExecStatus}'
+          acntExecStatus:
+            link: JavaScript1/result/ACNT_EXEC_STATUS
+            schema: any
+            mandatory: false
+      SF_ACNT_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ACNT_COMPLET=${@acntComplete}'
+          acntComplete:
+            link: JavaScript1/result/ACNT_COMPLETED
+            schema: any
+            mandatory: false
+      SF_ADRS_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ADRS_EXEC_STATUS=${@adrsExecStatus}'
+          adrsExecStatus:
+            link: JavaScript1/result/ADRS_EXEC_STATUS
+            schema: any
+            mandatory: false
+      SF_ACNT_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ACNT_REJECTED=${@acntRejected}'
+          acntRejected:
+            link: JavaScript1/result/ACNT_REJECTED
+            schema: any
+            mandatory: false
+      SF_ACNT_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ACNT_IN_PROC=${@acntInProc}'
+          acntInProc:
+            link: JavaScript1/result/ACNT_IN_PROCE
+            schema: any
+            mandatory: false
+      SF_ACNT_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ACNT_PENDING=${@acntPending}'
+          acntPending:
+            link: JavaScript1/result/ACNT_PENDING
+            schema: any
+            mandatory: false
+      SF_ADRS_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ADRS_COMPLET=${@adrsComplete}'
+          adrsComplete:
+            link: JavaScript1/result/ADRS_COMPLETED
+            schema: any
+            mandatory: false
+      SF_ADRS_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ADRS_REJECTED=${@adrsRejected}'
+          adrsRejected:
+            link: JavaScript1/result/ADRS_REJECTED
+            schema: any
+            mandatory: false
+      SF_ADRS_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ADRS_IN_PROC=${@adrsInProc}'
+          adrsInProc:
+            link: JavaScript1/result/ADRS_IN_PROCE
+            schema: any
+            mandatory: false
+      SF_ADRS_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.SF_ADRS_PENDING=${@adrsPending}'
+          adrsPending:
+            link: JavaScript1/result/ADRS_PENDING
+            schema: any
+            mandatory: false
+  Stage 4:
+    last: 1
+    dependsOn: Stage 7
+    actors:
+      Process Compelted:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: completed
+            schema: string
+          a:
+            link: JavaScript1/result/EXEC_STATUS
+      Loop Stop:
+        parent: LoopStop
+    split: '--------------------'
+  Stage 5:
+    last: 1
+    else: true
+    dependsOn: Stage 7
+    actors:
+      Sleep 1 second:
+        parent: Sleep
+schemas:
+  While1.out.result:
+    type: array
+    items:
+      type: integer
+  JavaScript1.out.result:
+    type: object
+    properties:
+      EXEC_STATUS:
+        type: string
+      COMPLETED:
+        type: number
+      REJECTED:
+        type: integer
+      IN_PROCE:
+        type: integer
+      PENDING:
+        type: number
+      CUST_EXEC_STATUS:
+        type: string
+      CUST_COMPLETED:
+        type: number
+      CUST_REJECTED:
+        type: integer
+      CUST_IN_PROCE:
+        type: integer
+      CUST_PENDING:
+        type: number
+      ACNT_EXEC_STATUS:
+        type: string
+      ACNT_COMPLETED:
+        type: number
+      ACNT_REJECTED:
+        type: integer
+      ACNT_IN_PROCE:
+        type: integer
+      ACNT_PENDING:
+        type: number
+      ADRS_EXEC_STATUS:
+        type: string
+      ADRS_COMPLETED:
+        type: number
+      ADRS_REJECTED:
+        type: integer
+      ADRS_IN_PROCE:
+        type: integer
+      ADRS_PENDING:
+        type: number
