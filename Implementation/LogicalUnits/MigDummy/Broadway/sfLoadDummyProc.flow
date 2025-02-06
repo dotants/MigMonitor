@@ -282,7 +282,7 @@ stages:
             const: set_global global 'k2_ws.SF_CUST_EXEC_STATUS=${@custExecStatus}'
           custExecStatus:
             link: JavaScript1/result/CUST_EXEC_STATUS
-            schema: any
+            schema: string
             mandatory: false
       SF_CUST_COMPLET:
         parent: DbCommand
@@ -293,7 +293,7 @@ stages:
             const: set_global global 'k2_ws.SF_CUST_COMPLET=${@custComplete}'
           custComplete:
             link: JavaScript1/result/CUST_COMPLETED
-            schema: any
+            schema: integer
             mandatory: false
       SF_CUST_REJECTED:
         parent: DbCommand
@@ -304,7 +304,7 @@ stages:
             const: set_global global 'k2_ws.SF_CUST_REJECTED=${@custRejected}'
           custRejected:
             link: JavaScript1/result/CUST_REJECTED
-            schema: any
+            schema: integer
             mandatory: false
       SF_CUST_IN_PROC:
         parent: DbCommand
@@ -315,7 +315,7 @@ stages:
             const: set_global global 'k2_ws.SF_CUST_IN_PROC=${@custInProc}'
           custInProc:
             link: JavaScript1/result/CUST_IN_PROCE
-            schema: any
+            schema: integer
             mandatory: false
       SF_CUST_PENDING:
         parent: DbCommand
@@ -326,7 +326,7 @@ stages:
             const: set_global global 'k2_ws.SF_CUST_PENDING=${@custPending}'
           custPending:
             link: JavaScript1/result/CUST_PENDING
-            schema: any
+            schema: integer
             mandatory: false
   Stage 7:
     actors:
@@ -339,7 +339,7 @@ stages:
             const: set_global global 'k2_ws.SF_ACNT_EXEC_STATUS=${@acntExecStatus}'
           acntExecStatus:
             link: JavaScript1/result/ACNT_EXEC_STATUS
-            schema: any
+            schema: string
             mandatory: false
       SF_ACNT_COMPLET:
         parent: DbCommand
@@ -350,7 +350,7 @@ stages:
             const: set_global global 'k2_ws.SF_ACNT_COMPLET=${@acntComplete}'
           acntComplete:
             link: JavaScript1/result/ACNT_COMPLETED
-            schema: any
+            schema: integer
             mandatory: false
       SF_ADRS_EXEC_STATUS:
         parent: DbCommand
@@ -361,7 +361,7 @@ stages:
             const: set_global global 'k2_ws.SF_ADRS_EXEC_STATUS=${@adrsExecStatus}'
           adrsExecStatus:
             link: JavaScript1/result/ADRS_EXEC_STATUS
-            schema: any
+            schema: string
             mandatory: false
       SF_ACNT_REJECTED:
         parent: DbCommand
@@ -372,7 +372,7 @@ stages:
             const: set_global global 'k2_ws.SF_ACNT_REJECTED=${@acntRejected}'
           acntRejected:
             link: JavaScript1/result/ACNT_REJECTED
-            schema: any
+            schema: integer
             mandatory: false
       SF_ACNT_IN_PROC:
         parent: DbCommand
@@ -383,7 +383,7 @@ stages:
             const: set_global global 'k2_ws.SF_ACNT_IN_PROC=${@acntInProc}'
           acntInProc:
             link: JavaScript1/result/ACNT_IN_PROCE
-            schema: any
+            schema: integer
             mandatory: false
       SF_ACNT_PENDING:
         parent: DbCommand
@@ -394,7 +394,7 @@ stages:
             const: set_global global 'k2_ws.SF_ACNT_PENDING=${@acntPending}'
           acntPending:
             link: JavaScript1/result/ACNT_PENDING
-            schema: any
+            schema: integer
             mandatory: false
       SF_ADRS_COMPLET:
         parent: DbCommand
@@ -405,7 +405,7 @@ stages:
             const: set_global global 'k2_ws.SF_ADRS_COMPLET=${@adrsComplete}'
           adrsComplete:
             link: JavaScript1/result/ADRS_COMPLETED
-            schema: any
+            schema: integer
             mandatory: false
       SF_ADRS_REJECTED:
         parent: DbCommand
@@ -416,7 +416,7 @@ stages:
             const: set_global global 'k2_ws.SF_ADRS_REJECTED=${@adrsRejected}'
           adrsRejected:
             link: JavaScript1/result/ADRS_REJECTED
-            schema: any
+            schema: integer
             mandatory: false
       SF_ADRS_IN_PROC:
         parent: DbCommand
@@ -427,7 +427,7 @@ stages:
             const: set_global global 'k2_ws.SF_ADRS_IN_PROC=${@adrsInProc}'
           adrsInProc:
             link: JavaScript1/result/ADRS_IN_PROCE
-            schema: any
+            schema: integer
             mandatory: false
       SF_ADRS_PENDING:
         parent: DbCommand
@@ -438,7 +438,7 @@ stages:
             const: set_global global 'k2_ws.SF_ADRS_PENDING=${@adrsPending}'
           adrsPending:
             link: JavaScript1/result/ADRS_PENDING
-            schema: any
+            schema: integer
             mandatory: false
   Stage 4:
     last: 1

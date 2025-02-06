@@ -12,6 +12,11 @@
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\dummyBatchOrch.flow</RelativePath>
       <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
     </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>sfLoadDummyProc.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\sfLoadDummyProc.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
   </ProjectItemPropList>
   <ProjectItemsCategoryList>
     <ProjectItemsCategory>

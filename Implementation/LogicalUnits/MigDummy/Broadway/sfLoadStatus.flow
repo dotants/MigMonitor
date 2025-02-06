@@ -1,10 +1,128 @@
 stages:
-  Stage 1: {
-    }
-  Stage 2: {
-    }
-  Stage 3: {
-    }
+  Stage 1:
+    actors:
+      SF_LOAD_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_LOAD_EXEC_STATUS
+            default: false
+      SF_LOAD_COMPLETED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_LOAD_COMPLETED
+            default: false
+      SF_LOAD_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_LOAD_REJECTED
+            default: false
+      SF_LOAD_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_LOAD_IN_PROC
+            default: false
+      SF_LOAD_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_LOAD_PENDING
+            default: false
+      SF_CUST_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_CUST_EXEC_STATUS
+            default: false
+      SF_CUST_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_CUST_COMPLET
+            default: false
+      SF_CUST_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_CUST_REJECTED
+            default: false
+      SF_CUST_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_CUST_IN_PROC
+            default: false
+      SF_CUST_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_CUST_PENDING
+            default: false
+  Stage 3:
+    actors:
+      SF_ACNT_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ACNT_EXEC_STATUS
+            default: false
+      SF_ACNT_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ACNT_COMPLET
+            default: false
+      SF_ACNT_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ACNT_REJECTED
+            default: false
+      SF_ACNT_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ACNT_IN_PROC
+            default: false
+      SF_ACNT_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ACNT_PENDING
+            default: false
+      SF_ADRS_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ADRS_EXEC_STATUS
+            default: false
+      SF_ADRS_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ADRS_COMPLET
+            default: false
+      SF_ADRS_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ADRS_REJECTED
+            default: false
+      SF_ADRS_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ADRS_IN_PROC
+            default: false
+      SF_ADRS_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_ADRS_PENDING
+            default: false
   Stage 4:
     actors:
       Create Output Structure:
@@ -19,74 +137,94 @@ stages:
               ${custLoadStatus}\",\r\n         \"completed\": \"${custCompCount}\"\
               ,\r\n         \"rejected\": \"${custRejectedCount}\",\r\n         \"\
               in process\": \"${custInProcCount}\",\r\n         \"pending\": \"${custPendingCount}\"\
-              ,\r\n       },\r\n       { \"name\": \"SF Account\",\r\n         \"\
-              status\": \"${accntLoadStatus}\",\r\n         \"completed\": \"${accntCompCount}\"\
+              \r\n       },\r\n       { \"name\": \"SF Account\",\r\n         \"status\"\
+              : \"${accntLoadStatus}\",\r\n         \"completed\": \"${accntCompCount}\"\
               ,\r\n         \"rejected\": \"${acctRejectedCount}\",\r\n         \"\
               in process\": \"${accntInProcCount}\",\r\n         \"pending\": \"${accntPendingCount}\"\
-              ,\r\n       },\r\n       { \"name\": \"SF Address\",\r\n         \"\
-              status\": \"${adrsLoadStatus}\",\r\n         \"completed\": \"${adrsCompCount}\"\
+              \r\n       },\r\n       { \"name\": \"SF Address\",\r\n         \"status\"\
+              : \"${adrsLoadStatus}\",\r\n         \"completed\": \"${adrsCompCount}\"\
               ,\r\n         \"rejected\": \"${adrsRejectedCount}\",\r\n         \"\
               in process\": \"${adrsInProcCount}\",\r\n         \"pending\": \"${adrsPendingCount}\"\
-              ,\r\n       }\r\n    ]\r\n}"
+              \r\n       }\r\n    ]\r\n}"
           execStatus:
+            link: SF_LOAD_EXEC_STATUS/result
             schema: string
             mandatory: false
           completedCount:
+            link: SF_LOAD_COMPLETED/result
             schema: integer
             mandatory: false
           rejectedCount:
+            link: SF_LOAD_REJECTED/result
             schema: integer
             mandatory: false
           inProcCount:
+            link: SF_LOAD_IN_PROC/result
             schema: integer
             mandatory: false
           pendingCount:
+            link: SF_LOAD_PENDING/result
             schema: integer
             mandatory: false
           custLoadStatus:
-            schema: any
+            link: SF_CUST_EXEC_STATUS/result
+            schema: string
             mandatory: false
           accntLoadStatus:
-            schema: any
+            link: SF_ACNT_EXEC_STATUS/result
+            schema: string
             mandatory: false
           adrsLoadStatus:
-            schema: any
+            link: SF_ADRS_EXEC_STATUS/result
+            schema: string
             mandatory: false
           custCompCount:
-            schema: any
+            link: SF_CUST_COMPLET/result
+            schema: string
             mandatory: false
           accntCompCount:
-            schema: any
+            link: SF_ACNT_COMPLET/result
+            schema: string
             mandatory: false
           adrsCompCount:
-            schema: any
+            link: SF_ADRS_COMPLET/result
+            schema: string
             mandatory: false
           custRejectedCount:
-            schema: any
+            link: SF_CUST_REJECTED/result
+            schema: string
             mandatory: false
           acctRejectedCount:
-            schema: any
+            link: SF_ACNT_REJECTED/result
+            schema: string
             mandatory: false
           adrsRejectedCount:
-            schema: any
+            link: SF_ADRS_REJECTED/result
+            schema: string
             mandatory: false
           custInProcCount:
-            schema: any
+            link: SF_CUST_IN_PROC/result
+            schema: string
             mandatory: false
           accntInProcCount:
-            schema: any
+            link: SF_ACNT_IN_PROC/result
+            schema: string
             mandatory: false
           adrsInProcCount:
-            schema: any
+            link: SF_ADRS_IN_PROC/result
+            schema: string
             mandatory: false
           custPendingCount:
-            schema: any
+            link: SF_CUST_PENDING/result
+            schema: string
             mandatory: false
           accntPendingCount:
-            schema: any
+            link: SF_ACNT_PENDING/result
+            schema: string
             mandatory: false
           adrsPendingCount:
-            schema: any
+            link: SF_ADRS_PENDING/result
+            schema: string
             mandatory: false
   Stage 5:
     actors:
@@ -115,3 +253,20 @@ schemas:
         type: string
       pending:
         type: string
+      subProcesses:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            status:
+              type: string
+            completed:
+              type: string
+            rejected:
+              type: string
+            in process:
+              type: string
+            pending:
+              type: string

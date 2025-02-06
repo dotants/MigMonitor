@@ -39,7 +39,7 @@ stages:
             schema: string
           listLength:
             schema: integer
-  Stage 3:
+  Extract batch:
     actors:
       Batch Command:
         parent: DbCommand
@@ -60,7 +60,7 @@ stages:
         out:
           result:
             schema: '#ref'
-  Stage 4:
+  Wait for Extract to finish:
     actors:
       Batch Wait:
         parent: BatchWait
@@ -69,6 +69,48 @@ stages:
             link:
               path: Batch Command/result/Batch id
               iterate: First
+  Stage 4:
+    actors:
+      MathMultiply1:
+        parent: MathMultiply
+        in:
+          b:
+            const: -1
+            schema: integer
+          a:
+            link: Batch Wait/failed
+      StringFormat1:
+        parent: StringFormat
+        in:
+          format:
+            const: sfLoadDummyProc_${execId}
+          execId:
+            link: 'getMigExecId: InnerFlow/execId'
+            schema: integer
+            mandatory: false
+  Stage 3:
+    actors:
+      MathAdd1:
+        parent: MathAdd
+        in:
+          a:
+            link: genIdList/listLength
+          b:
+            link: MathMultiply1/result
+  SF Load:
+    actors:
+      BroadwayJob1:
+        parent: BroadwayJob
+        in:
+          flowName:
+            const: sfLoadDummyProc
+          uid:
+            const: null
+            link: StringFormat1/string
+          noOfCust:
+            link: MathAdd1/result
+            schema: integer
+            mandatory: false
 schemas:
   Batch Command.out.result:
     type: array
