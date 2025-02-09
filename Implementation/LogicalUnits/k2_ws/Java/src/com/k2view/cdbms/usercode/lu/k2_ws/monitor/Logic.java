@@ -51,13 +51,13 @@ public class Logic extends WebServiceUserCode {
 
 	@desc("Get Execution Id value")
 	@webService(path = "", verb = {MethodType.GET, MethodType.POST, MethodType.PUT, MethodType.DELETE}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
-	public static String wsExecId() throws Exception {
-		String execId = "";
+	public static Object wsExecId() throws Exception {
+		Object execId = new Object();
 		
 		Db.Rows rows = fabric().fetch("broadway MigDummy.getMigExecId");
 		
 		for (Db.Row row:rows) {
-			execId = (String)row.cell(0);
+			execId = (Object)row.cell(0);
 			break;
 		}
 		

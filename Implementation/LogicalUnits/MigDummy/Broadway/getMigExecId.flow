@@ -26,9 +26,6 @@ stages:
             const: 3
           maximum:
             const: 200
-        out:
-          value:
-            external: execId
     split: '--------------------'
   Use Existing:
     else: true
@@ -42,5 +39,26 @@ stages:
             link: get EXEC_ID/result
         out:
           value:
-            external: execId
             schema: string
+  JSON Output:
+    actors:
+      execId:
+        parent: MapBuild
+        in:
+          key:
+            const: execId
+            schema: string
+          value:
+            link:
+            - Gen Exec Id/value
+            - Use Existing EXEC_ID/value
+        out:
+          map:
+            external: execId
+            schema: '#ref'
+schemas:
+  execId.out.map:
+    type: object
+    properties:
+      execId:
+        type: integer
