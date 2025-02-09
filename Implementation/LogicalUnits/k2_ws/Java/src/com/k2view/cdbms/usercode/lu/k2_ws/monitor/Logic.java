@@ -31,15 +31,14 @@ import static com.k2view.cdbms.usercode.common.SharedGlobals.*;
 public class Logic extends WebServiceUserCode {
 
 
-	@webService(path = "", verb = {MethodType.GET, MethodType.POST, MethodType.PUT, MethodType.DELETE}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
 	public static Object wsExtractStatus(@param(required=true) String execId) throws Exception {
 		return fabric().fetch("broadway MigDummy.extractStatus execId='"+execId+"'");
 	}
 
 
-	@webService(path = "", verb = {MethodType.GET, MethodType.POST, MethodType.PUT, MethodType.DELETE}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
 	public static Object wsMonitorConfig() throws Exception {
-		
 		MTable mTable = MTables.get("mtMigMonitorConfig");
 		Map<String,Object> key= new HashMap<>();
 		key.put("Active Ind", "1");
@@ -50,7 +49,7 @@ public class Logic extends WebServiceUserCode {
 
 
 	@desc("Get Execution Id value")
-	@webService(path = "", verb = {MethodType.GET, MethodType.POST, MethodType.PUT, MethodType.DELETE}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
 	public static Object wsExecId() throws Exception {
 		Object execId = new Object();
 		
