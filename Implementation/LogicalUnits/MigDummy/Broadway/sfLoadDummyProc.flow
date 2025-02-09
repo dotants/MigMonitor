@@ -1,5 +1,5 @@
 stages:
-  Stage 1:
+  Stage 8:
     actors:
       While1:
         parent: While
@@ -9,6 +9,11 @@ stages:
         out:
           result:
             schema: '#ref'
+      initSfCounters:
+        parent: InnerFlow
+        in:
+          flowName:
+            const: initSfCounters
   Stage 2:
     actors:
       dummy:

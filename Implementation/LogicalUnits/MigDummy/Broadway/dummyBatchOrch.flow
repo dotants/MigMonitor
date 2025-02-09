@@ -15,7 +15,12 @@ stages:
             const: getMigExecId
         out:
           execId:
-            schema: integer
+            schema: '#ref'
+      initSfCounters:
+        parent: InnerFlow
+        in:
+          flowName:
+            const: initSfCounters
   Stage 2:
     actors:
       Set new EXEC_ID:
@@ -26,7 +31,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.EXEC_ID=${@execId}'
           execId:
-            link: 'getMigExecId: InnerFlow/execId'
+            link: 'getMigExecId: InnerFlow/execId/execId'
             schema: integer
             mandatory: false
       genIdList:
@@ -54,7 +59,7 @@ stages:
             schema: string
             mandatory: false
           execId:
-            link: 'getMigExecId: InnerFlow/execId'
+            link: 'getMigExecId: InnerFlow/execId/execId'
             schema: integer
             mandatory: false
         out:
@@ -85,7 +90,7 @@ stages:
           format:
             const: sfLoadDummyProc_${execId}
           execId:
-            link: 'getMigExecId: InnerFlow/execId'
+            link: 'getMigExecId: InnerFlow/execId/execId'
             schema: integer
             mandatory: false
   Stage 3:
@@ -112,6 +117,11 @@ stages:
             schema: integer
             mandatory: false
 schemas:
+  'getMigExecId: InnerFlow.out.execId':
+    type: object
+    properties:
+      execId:
+        type: integer
   Batch Command.out.result:
     type: array
     items:
