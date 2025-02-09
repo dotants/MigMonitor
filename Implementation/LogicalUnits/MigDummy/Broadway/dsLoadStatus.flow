@@ -202,7 +202,7 @@ stages:
         parent: StringFormat
         in:
           format:
-            const: "{ \r\n   \"name\": \"DS pRODUCT\",\r\n   \"status\" : \"${execStatus}\"\
+            const: "{ \r\n   \"name\": \"DS Product\",\r\n   \"status\" : \"${execStatus}\"\
               ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
               \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
               \n    \"pending\": \"${pendingCount}\"\r\n}"
