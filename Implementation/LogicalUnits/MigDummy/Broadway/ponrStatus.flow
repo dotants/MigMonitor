@@ -1,0 +1,187 @@
+stages:
+  Stage 1:
+    actors:
+      SF Load UID:
+        parent: StringFormat
+        in:
+          format:
+            const: sfLoadDummyProc_${execId}
+          execId:
+            external: execId
+            schema: integer
+            mandatory: false
+      DS Load UID:
+        parent: StringFormat
+        in:
+          format:
+            const: dsLoadDummyProc_${execId}
+          execId:
+            external: execId
+            schema: integer
+            mandatory: false
+  Stage 2:
+    actors:
+      SF Load Job Status:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: jobstatus BROADWAY_JOB 'MigDummy.sfLoadDummyProc' with UID='${@sfLoadUid}'
+          sfLoadUid:
+            link: SF Load UID/string
+            schema: string
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+      DS Load Job Status:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: jobstatus BROADWAY_JOB 'MigDummy.dsLoadDummyProc' with UID='${@dsLoadUid}'
+          dsLoadUid:
+            link: DS Load UID/string
+            schema: string
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+  Stage 3:
+    actors:
+      PONR Status:
+        parent: JavaScript
+        in:
+          script:
+            const: |-
+              var ponrStatus = { "name": "PONR",
+                                 "status" :    "TBD",
+                                 "completed":  0,
+                                 "rejected":   0,
+                                 "in process": 0,
+                                 "pending":    0
+                               };
+
+
+              if ( sfJobStatus == undefined || sfJobStatus == null || sfJobStatus == "" ||
+                   sfJobStatus == "WAITING" || sfJobStatus == "IN_PROCESS" || sfJobStatus == "SCHEDULED" || sfJobStatus == "RESTART" ) {
+                      ponrStatus["status"] = "running";
+              } else if ( sfJobStatus == "PROCESSED" ) {
+                  if ( dsJobStatus == undefined || dsJobStatus == null || dsJobStatus == "" ||
+                       dsJobStatus == "WAITING" || dsJobStatus == "IN_PROCESS" || dsJobStatus == "SCHEDULED" || dsJobStatus == "RESTART" ) {
+                          ponrStatus["status"] = "running";
+                  } else if ( dsJobStatus == "PROCESSED" ) {
+                      ponrStatus["status"] = "completed";
+                  } else if ( dsJobStatus == "FAILED" ) {
+                      ponrStatus["status"] = "failed";
+                  } else if ( dsJobStatus == "STOPPING" || dsJobStatus == "TERMINATED" ) {
+                      ponrStatus["status"] = "cancelled";
+                  }
+              } else if ( sfJobStatus == "FAILED" ) {
+                  ponrStatus["status"] = "failed";
+              } else if ( sfJobStatus == "STOPPING" || sfJobStatus == "TERMINATED" ) {
+                  ponrStatus["status"] = "cancelled";
+              }
+
+              ponrStatus;
+          sfJobStatus:
+            link:
+              path: SF Load Job Status/result/Status
+              iterate: First
+            schema: string
+            mandatory: false
+          dsJobStatus:
+            link:
+              path: DS Load Job Status/result/Status
+              iterate: First
+            schema: string
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+  Stage 4: {
+    }
+schemas:
+  SF Load Job Status.out.result:
+    type: array
+    items:
+      type: object
+      properties:
+        Type:
+          type: string
+        Name:
+          type: string
+        UID:
+          type: string
+        Status:
+          type: string
+        Creation Time:
+          type: string
+        Start Time:
+          type: string
+        End Time:
+          type: string
+        Affinity:
+          type: string
+        Is Archived:
+          type: string
+        Next Run:
+          type: string
+        Ownership Candidates Num:
+          type: string
+        Notes:
+          type: string
+        Node:
+          type: string
+        Tries:
+          type: integer
+  DS Load Job Status.out.result:
+    type: array
+    items:
+      type: object
+      properties:
+        Type:
+          type: string
+        Name:
+          type: string
+        UID:
+          type: string
+        Status:
+          type: string
+        Creation Time:
+          type: string
+        Start Time:
+          type: string
+        End Time:
+          type: string
+        Affinity:
+          type: string
+        Is Archived:
+          type: string
+        Next Run:
+          type: string
+        Ownership Candidates Num:
+          type: string
+        Notes:
+          type: string
+        Node:
+          type: string
+        Tries:
+          type: integer
+  PONR Status.out.result:
+    type: object
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+      completed:
+        type: integer
+      rejected:
+        type: integer
+      in process:
+        type: integer
+      pending:
+        type: integer

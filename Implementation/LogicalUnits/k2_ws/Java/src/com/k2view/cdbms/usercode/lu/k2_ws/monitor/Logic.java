@@ -87,6 +87,12 @@ public class Logic extends WebServiceUserCode {
 		return fabric().fetch("broadway MigDummy.dsLoadStatus execId='"+execId+"' wsName='wsDsProductStatus'");
 	}
 
+
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	public static Object wsPonrDummy(String execId) throws Exception {
+		return fabric().fetch("broadway MigDummy.ponrStatus execId='"+execId+"'");
+	}
+
 	
 	
 

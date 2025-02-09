@@ -89,7 +89,7 @@ stages:
             schema: integer
           a:
             link: Batch Wait/failed
-      StringFormat1:
+      SF Load UID:
         parent: StringFormat
         in:
           format:
@@ -98,7 +98,7 @@ stages:
             link: 'getMigExecId: InnerFlow/execId/execId'
             schema: integer
             mandatory: false
-      StringFormat2:
+      DS Load UID:
         parent: StringFormat
         in:
           format:
@@ -125,7 +125,7 @@ stages:
             const: sfLoadDummyProc
           uid:
             const: null
-            link: StringFormat1/string
+            link: SF Load UID/string
           noOfCust:
             link: MathAdd1/result
             schema: integer
@@ -137,11 +137,33 @@ stages:
             const: dsLoadDummyProc
           uid:
             const: null
-            link: StringFormat2/string
+            link: DS Load UID/string
           noOfCust:
             link: MathAdd1/result
             schema: integer
             mandatory: false
+  PONR:
+    actors:
+      SF Load Wait:
+        parent: JobWait
+        in:
+          jobType:
+            const: BROADWAY_JOB
+          name:
+            const: MigDummy.sfLoadDummyProc
+          uid:
+            const: null
+            link: SF Load UID/string
+      DS Load Wait:
+        parent: JobWait
+        in:
+          jobType:
+            const: BROADWAY_JOB
+          name:
+            const: MigDummy.dsLoadDummyProc
+          uid:
+            const: null
+            link: DS Load UID/string
 schemas:
   'getMigExecId: InnerFlow.out.execId':
     type: object
