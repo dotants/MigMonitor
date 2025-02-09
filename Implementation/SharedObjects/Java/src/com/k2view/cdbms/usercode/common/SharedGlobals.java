@@ -46,6 +46,22 @@ public class SharedGlobals {
 	public static String SF_ADRS_IN_PROC = "0";
 	public static String SF_ADRS_PENDING = "0";
 
+	public static String DS_LOAD_EXEC_STATUS = "N/A";
+	public static String DS_LOAD_COMPLETED = "0";
+	public static String DS_LOAD_REJECTED = "0";
+	public static String DS_LOAD_IN_PROC = "0";
+	public static String DS_LOAD_PENDING = "0";
+	public static String DS_CONT_EXEC_STATUS = "N/A";
+	public static String DS_CONT_COMPLET = "0";
+	public static String DS_CONT_REJECTED = "0";
+	public static String DS_CONT_IN_PROC = "0";
+	public static String DS_CONT_PENDING = "0";
+	public static String DS_PROD_EXEC_STATUS = "N/A";
+	public static String DS_PROD_COMPLET = "0";
+	public static String DS_PROD_REJECTED = "0";
+	public static String DS_PROD_IN_PROC = "0";
+	public static String DS_PROD_PENDING = "0";
+
 	
 
 

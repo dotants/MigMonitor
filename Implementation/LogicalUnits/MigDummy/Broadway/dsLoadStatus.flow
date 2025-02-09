@@ -1,0 +1,275 @@
+stages:
+  Stage 1: {
+    }
+  Stage 3: {
+    }
+  wsDsLoadStatus:
+    dependsOn: Stage 3
+    actors:
+      WS Name wsDsLoadStatus:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: wsDsLoadStatus
+            schema: string
+          a:
+            external: wsName
+      DS_LOAD_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_LOAD_EXEC_STATUS
+            default: false
+      DS_LOAD_COMPLETED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_LOAD_COMPLETED
+            default: false
+      DS_LOAD_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_LOAD_REJECTED
+            default: false
+      DS_LOAD_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_LOAD_IN_PROC
+            default: false
+      DS_LOAD_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_LOAD_PENDING
+            default: false
+    split: '--------------------'
+  wsDsContactStatus:
+    dependsOn: Stage 3
+    actors:
+      WS Name wsDsContactStatus:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: wsDsContactStatus
+            schema: string
+          a:
+            external: wsName
+      DS_CONT_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_CONT_EXEC_STATUS
+            default: false
+      SF_CONT_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_CONT_COMPLET
+            default: false
+      DS_CONT_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_CONT_REJECTED
+            default: false
+      DS_CONT_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_CONT_IN_PROC
+            default: false
+      DS_CONT_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_CONT_PENDING
+            default: false
+    split: '--------------------'
+  wsDsProductStatus:
+    dependsOn: Stage 3
+    actors:
+      WS Name wsDsProductStatus:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: wsDsProductStatus
+            schema: string
+          a:
+            external: wsName
+      DS_PROD_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_PROD_EXEC_STATUS
+            default: false
+      DS_PROD_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_PROD_COMPLET
+            default: false
+      DS_PROD_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_PROD_REJECTED
+            default: false
+      DS_PROD_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_PROD_IN_PROC
+            default: false
+      DS_PROD_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.DS_PROD_PENDING
+            default: false
+  Stage 2:
+    dependsOn: wsDsLoadStatus
+    actors:
+      Overall Load Status:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"DS Load\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\"\r\n}"
+          execStatus:
+            link: DS_LOAD_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          completedCount:
+            link: DS_LOAD_COMPLETED/result
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: DS_LOAD_REJECTED/result
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: DS_LOAD_IN_PROC/result
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: DS_LOAD_PENDING/result
+            schema: integer
+            mandatory: false
+    split: '--------------------'
+  Stage 4:
+    dependsOn: wsDsContactStatus
+    actors:
+      Contact Load Status:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"DS Contact\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\"\r\n}"
+          execStatus:
+            link: DS_CONT_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          completedCount:
+            link: SF_CONT_COMPLET/result
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: DS_CONT_REJECTED/result
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: DS_CONT_IN_PROC/result
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: DS_CONT_PENDING/result
+            schema: integer
+            mandatory: false
+    split: '--------------------'
+  Stage 6:
+    dependsOn: wsDsProductStatus
+    actors:
+      Product Load Status:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"DS pRODUCT\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\"\r\n}"
+          execStatus:
+            link: DS_PROD_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          completedCount:
+            link: DS_PROD_COMPLET/result
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: DS_PROD_REJECTED/result
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: DS_PROD_IN_PROC/result
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: DS_PROD_PENDING/result
+            schema: integer
+            mandatory: false
+  Stage 5:
+    actors:
+      Convert T o Object:
+        parent: JsonParser
+        in:
+          stream:
+            link:
+            - Overall Load Status/string
+            - Contact Load Status/string
+            - Product Load Status/string
+        out:
+          object:
+            external: sfLoadStatus
+            schema: '#ref'
+schemas:
+  Convert T o Object.out.object:
+    type: object
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+      completed:
+        type: string
+      rejected:
+        type: string
+      in process:
+        type: string
+      pending:
+        type: string
+      subProcesses:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            status:
+              type: string
+            completed:
+              type: string
+            rejected:
+              type: string
+            in process:
+              type: string
+            pending:
+              type: string

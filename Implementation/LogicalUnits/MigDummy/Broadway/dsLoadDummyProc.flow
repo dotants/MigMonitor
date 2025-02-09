@@ -1,0 +1,343 @@
+stages:
+  Stage 8:
+    actors:
+      While1:
+        parent: While
+        in:
+          script:
+            const: '1'
+        out:
+          result:
+            schema: '#ref'
+      initDsCounters:
+        parent: InnerFlow
+        in:
+          flowName:
+            const: initDsCounters
+  Stage 2:
+    actors:
+      dummy:
+        parent: Const
+        in:
+          value:
+            const: null
+            link:
+              path: While1/result
+              iterate: Iterate
+        out:
+          value:
+            schema: integer
+      Current time:
+        parent: Now
+  Stage 6:
+    actors:
+      Calc status:
+        parent: JavaScript
+        in:
+          script:
+            const: |+
+              if ( contextLoop.index() == 0 ) {
+                  self.startTime = currentTime;
+                  self.currentStatus = { EXEC_STATUS:"running",
+                                         COMPLETED: 0,
+                                         REJECTED: 0,
+                                         IN_PROCE: 8,
+                                         PENDING: noOfCust,
+                                         CONT_EXEC_STATUS:"running",
+                                         CONT_COMPLETED: 0,
+                                         CONT_REJECTED: 0,
+                                         CONT_IN_PROCE: 8,
+                                         CONT_PENDING: Math.floor(noOfCust*1.5),
+                                         PROD_EXEC_STATUS:"running",
+                                         PROD_COMPLETED: 0,
+                                         PROD_REJECTED: 0,
+                                         PROD_IN_PROCE: 8,
+                                         PROD_PENDING: Math.floor(noOfCust*1.8)
+                                         };
+              }
+
+              if ( currentTime > self.startTime ) {
+
+                  // Assisting variables
+                  var secondsSinceStart = (currentTime-self.startTime)/1000;
+                  var completedCont = Math.floor(secondsSinceStart/6);
+                  var completedProd = Math.floor(secondsSinceStart/7);
+
+                  // Contact level update
+                  if ( completedCont < Math.floor(noOfCust*1.5) ) {
+                      self.currentStatus.CONT_COMPLETED = completedCont;
+                      self.currentStatus.CONT_PENDING = Math.floor(noOfCust*1.5) - completedCont;
+                  } else {
+                      self.currentStatus.CONT_EXEC_STATUS = "completed";
+                      self.currentStatus.CONT_COMPLETED = Math.floor(noOfCust*1.5);
+                      self.currentStatus.CONT_IN_PROCE = 0;
+                      self.currentStatus.CONT_PENDING = 0;
+                  }
+
+                  // Account level update
+                  if ( completedProd < Math.floor(noOfCust*1.8) ) {
+                      self.currentStatus.PROD_COMPLETED = completedProd;
+                      self.currentStatus.PROD_PENDING = Math.floor(noOfCust*1.8) - completedProd;
+                  } else {
+                      self.currentStatus.PROD_EXEC_STATUS = "completed";
+                      self.currentStatus.PROD_COMPLETED = Math.floor(noOfCust*1.8);
+                      self.currentStatus.PROD_IN_PROCE = 0;
+                      self.currentStatus.PROD_PENDING = 0;
+                  }
+
+                  // Check if entire process is completed
+                  if ( self.currentStatus.CONT_EXEC_STATUS == "completed" &&
+                       self.currentStatus.PROD_EXEC_STATUS == "completed" ) {
+                       self.currentStatus.EXEC_STATUS = "completed";
+                       self.currentStatus.COMPLETED = noOfCust;
+                       self.currentStatus.IN_PROCE = 0;
+                       self.currentStatus.PENDING = 0;
+                   } else {
+                       self.currentStatus.COMPLETED = Math.min(Math.floor(completedProd/1.8),Math.floor(completedCont/1.5));
+                       self.currentStatus.PENDING = noOfCust - self.currentStatus.COMPLETED;
+                   }
+              }
+
+              self.currentStatus;
+
+
+          noOfCust:
+            external: noOfCust
+            schema: integer
+            mandatory: false
+          currentTime:
+            link: Current time/timestamp
+            schema: integer
+            mandatory: false
+        out:
+          result:
+            schema: '#ref'
+  Stage 3:
+    actors:
+      DS_LOAD_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_EXEC_STATUS=${@procStatus}'
+          procStatus:
+            schema: string
+            mandatory: false
+      DS_LOAD_COMPLETED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_COMPLETED=${@completed}'
+          completed:
+            link: Calc status/result/COMPLETED
+            schema: integer
+            mandatory: false
+      DS_LOAD_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_REJECTED=${@rejected}'
+          rejected:
+            link: Calc status/result/REJECTED
+            schema: integer
+            mandatory: false
+      DS_LOAD_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_IN_PROC=${@inProc}'
+          inProc:
+            link: Calc status/result/IN_PROCE
+            schema: integer
+            mandatory: false
+      DS_LOAD_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_PENDING=${@pending}'
+          pending:
+            link: Calc status/result/PENDING
+            schema: integer
+            mandatory: false
+      DS_CONT_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_EXEC_STATUS=${@custExecStatus}'
+          custExecStatus:
+            link: Calc status/result/CONT_EXEC_STATUS
+            schema: string
+            mandatory: false
+      DS_CONT_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_COMPLET=${@custComplete}'
+          custComplete:
+            link: Calc status/result/CONT_COMPLETED
+            schema: integer
+            mandatory: false
+      DS_CONT_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_REJECTED=${@custRejected}'
+          custRejected:
+            link: Calc status/result/CONT_REJECTED
+            schema: integer
+            mandatory: false
+      DS_CONT_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_IN_PROC=${@custInProc}'
+          custInProc:
+            link: Calc status/result/CONT_IN_PROCE
+            schema: integer
+            mandatory: false
+      DS_CONT_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_PENDING=${@custPending}'
+          custPending:
+            link: Calc status/result/CONT_PENDING
+            schema: integer
+            mandatory: false
+  Stage 7:
+    actors:
+      DS_PROD_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_EXEC_STATUS=${@acntExecStatus}'
+          acntExecStatus:
+            link: Calc status/result/PROD_EXEC_STATUS
+            schema: string
+            mandatory: false
+      DS_PROD_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_COMPLET=${@acntComplete}'
+          acntComplete:
+            link: Calc status/result/PROD_COMPLETED
+            schema: integer
+            mandatory: false
+      DS_PROD_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_REJECTED=${@acntRejected}'
+          acntRejected:
+            link: Calc status/result/PROD_REJECTED
+            schema: integer
+            mandatory: false
+      DS_PROD_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_IN_PROC=${@acntInProc}'
+          acntInProc:
+            link: Calc status/result/PROD_IN_PROCE
+            schema: integer
+            mandatory: false
+      DS_PROD_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_PENDING=${@acntPending}'
+          acntPending:
+            link: Calc status/result/PROD_PENDING
+            schema: integer
+            mandatory: false
+  Stage 4:
+    last: 1
+    dependsOn: Stage 7
+    actors:
+      Process Compelted:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: completed
+            schema: string
+          a:
+            link: Calc status/result/EXEC_STATUS
+      Loop Stop:
+        parent: LoopStop
+    split: '--------------------'
+  Stage 5:
+    last: 1
+    else: true
+    dependsOn: Stage 7
+    actors:
+      Sleep 1 second:
+        parent: Sleep
+schemas:
+  While1.out.result:
+    type: array
+    items:
+      type: integer
+  Calc status.out.result:
+    type: object
+    properties:
+      EXEC_STATUS:
+        type: string
+      COMPLETED:
+        type: integer
+      REJECTED:
+        type: integer
+      IN_PROCE:
+        type: integer
+      PENDING:
+        type: integer
+      CONT_EXEC_STATUS:
+        type: string
+      CONT_COMPLETED:
+        type: integer
+      CONT_REJECTED:
+        type: integer
+      CONT_IN_PROCE:
+        type: integer
+      CONT_PENDING:
+        type: integer
+      PROD_EXEC_STATUS:
+        type: string
+      PROD_COMPLETED:
+        type: integer
+      PROD_REJECTED:
+        type: integer
+      PROD_IN_PROCE:
+        type: integer
+      PROD_PENDING:
+        type: integer

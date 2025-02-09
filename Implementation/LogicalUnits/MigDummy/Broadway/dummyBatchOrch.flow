@@ -21,6 +21,11 @@ stages:
         in:
           flowName:
             const: initSfCounters
+      initDsCounters:
+        parent: InnerFlow
+        in:
+          flowName:
+            const: initDsCounters
   Stage 2:
     actors:
       Set new EXEC_ID:
@@ -93,6 +98,15 @@ stages:
             link: 'getMigExecId: InnerFlow/execId/execId'
             schema: integer
             mandatory: false
+      StringFormat2:
+        parent: StringFormat
+        in:
+          format:
+            const: dsLoadDummyProc_${execId}
+          execId:
+            link: 'getMigExecId: InnerFlow/execId/execId'
+            schema: integer
+            mandatory: false
   Stage 3:
     actors:
       MathAdd1:
@@ -104,7 +118,7 @@ stages:
             link: MathMultiply1/result
   SF Load:
     actors:
-      BroadwayJob1:
+      sfLoadDummyProc:
         parent: BroadwayJob
         in:
           flowName:
@@ -112,6 +126,18 @@ stages:
           uid:
             const: null
             link: StringFormat1/string
+          noOfCust:
+            link: MathAdd1/result
+            schema: integer
+            mandatory: false
+      dsLoadDummyProc:
+        parent: BroadwayJob
+        in:
+          flowName:
+            const: dsLoadDummyProc
+          uid:
+            const: null
+            link: StringFormat2/string
           noOfCust:
             link: MathAdd1/result
             schema: integer

@@ -1,0 +1,110 @@
+stages:
+  Stage 1:
+    actors:
+      Init DS_LOAD_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_EXEC_STATUS=N/A'
+      Init DS_LOAD_COMPLETED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_COMPLETED=0'
+      Init DS_LOAD_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_REJECTED=0'
+      Init DS_LOAD_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_IN_PROC=0'
+      Init DS_LOAD_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_LOAD_PENDING=0'
+      Init DS_CONT_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_EXEC_STATUS=N/A'
+      Init DS_CONT_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_COMPLET=0'
+      Init DS_CONT_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_REJECTED=0'
+      Init DS_CONT_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_IN_PROC=0'
+      Init DS_CONT_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_CONT_PENDING=0'
+  Stage 2:
+    actors:
+      Init DS_PROD_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_EXEC_STATUS=N/A'
+      Init DS_PROD_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_COMPLET=0'
+      Init DS_PROD_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_REJECTED=0'
+      Init DS_PROD_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_IN_PROC=0'
+      Init DS_PROD_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.DS_PROD_PENDING=0'
