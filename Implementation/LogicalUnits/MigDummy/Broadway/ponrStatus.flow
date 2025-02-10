@@ -66,12 +66,13 @@ stages:
 
 
               if ( sfJobStatus == undefined || sfJobStatus == null || sfJobStatus == "" ||
-                   sfJobStatus == "WAITING" || sfJobStatus == "IN_PROCESS" || sfJobStatus == "SCHEDULED" || sfJobStatus == "RESTART" ) {
+                   dsJobStatus == undefined || dsJobStatus == null || dsJobStatus == "" ) {
+                      ponrStatus["status"] = "unknown";
+              } else if ( sfJobStatus == "WAITING" || sfJobStatus == "IN_PROCESS" || sfJobStatus == "SCHEDULED" || sfJobStatus == "RESTART" ) {
                       ponrStatus["status"] = "running";
               } else if ( sfJobStatus == "PROCESSED" ) {
-                  if ( dsJobStatus == undefined || dsJobStatus == null || dsJobStatus == "" ||
-                       dsJobStatus == "WAITING" || dsJobStatus == "IN_PROCESS" || dsJobStatus == "SCHEDULED" || dsJobStatus == "RESTART" ) {
-                          ponrStatus["status"] = "running";
+                  if ( dsJobStatus == "WAITING" || dsJobStatus == "IN_PROCESS" || dsJobStatus == "SCHEDULED" || dsJobStatus == "RESTART" ) {
+                      ponrStatus["status"] = "running";
                   } else if ( dsJobStatus == "PROCESSED" ) {
                       ponrStatus["status"] = "completed";
                   } else if ( dsJobStatus == "FAILED" ) {
