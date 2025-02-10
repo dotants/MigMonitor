@@ -31,6 +31,11 @@ stages:
         in:
           flowName:
             const: initS2Counters
+      initS3Counters:
+        parent: InnerFlow
+        in:
+          flowName:
+            const: initS3Counters
   Stage 2:
     actors:
       Set new EXEC_ID:
@@ -172,6 +177,15 @@ stages:
             link: 'getMigExecId: InnerFlow/execId/execId'
             schema: integer
             mandatory: false
+      S3 Load UID:
+        parent: StringFormat
+        in:
+          format:
+            const: s3LoadDummyProc_${execId}
+          execId:
+            link: 'getMigExecId: InnerFlow/execId/execId'
+            schema: integer
+            mandatory: false
   PONR:
     actors:
       SF Load Wait:
@@ -223,6 +237,18 @@ stages:
           uid:
             const: null
             link: S2 Load UID/string
+          noOfCust:
+            link: MathAdd1/result
+            schema: integer
+            mandatory: false
+      S3 Load Process1:
+        parent: BroadwayJob
+        in:
+          flowName:
+            const: s3LoadDummyProc
+          uid:
+            const: null
+            link: S3 Load UID/string
           noOfCust:
             link: MathAdd1/result
             schema: integer

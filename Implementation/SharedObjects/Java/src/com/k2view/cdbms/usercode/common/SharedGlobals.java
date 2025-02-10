@@ -72,11 +72,27 @@ public class SharedGlobals {
 	public static String S2_P1_REJECTED = "0";
 	public static String S2_P1_IN_PROC = "0";
 	public static String S2_P1_PENDING = "0";
-	public static String S2_P2_EXEC_STATUS = "0";
+	public static String S2_P2_EXEC_STATUS = "N/A";
 	public static String S2_P2_COMPLET = "0";
 	public static String S2_P2_REJECTED = "0";
 	public static String S2_P2_IN_PROC = "0";
 	public static String S2_P2_PENDING = "0";
+
+	public static String S3_LOAD_EXEC_STATUS = "N/A";
+	public static String S3_LOAD_COMPLETED = "0";
+	public static String S3_LOAD_REJECTED = "0";
+	public static String S3_LOAD_IN_PROC = "0";
+	public static String S3_LOAD_PENDING = "0";
+	public static String S3_P1_EXEC_STATUS = "N/A";
+	public static String S3_P1_COMPLET = "0";
+	public static String S3_P1_REJECTED = "0";
+	public static String S3_P1_IN_PROC = "0";
+	public static String S3_P1_PENDING = "0";
+	public static String S3_P2_EXEC_STATUS = "N/A";
+	public static String S3_P2_COMPLET = "0";
+	public static String S3_P2_REJECTED = "0";
+	public static String S3_P2_IN_PROC = "0";
+	public static String S3_P2_PENDING = "0";
 
 	
 

@@ -9,11 +9,11 @@ stages:
         out:
           result:
             schema: '#ref'
-      initS2Counters:
+      initS3Counters:
         parent: InnerFlow
         in:
           flowName:
-            const: initS2Counters
+            const: initS3Counters
       Now1:
         parent: Now
   Stage 2:
@@ -50,12 +50,12 @@ stages:
                                            P1_COMPLETED: 0,
                                            P1_REJECTED: 0,
                                            P1_IN_PROCE: 8,
-                                           P1_PENDING: noOfCust*3,
+                                           P1_PENDING: noOfCust*2,
                                            P2_EXEC_STATUS:"running",
                                            P2_COMPLETED: 0,
                                            P2_REJECTED: 0,
                                            P2_IN_PROCE: 8,
-                                           P2_PENDING: noOfCust*4,
+                                           P2_PENDING: noOfCust*3,
                                            DURATION: currentTime - self.startTime
                                            };
                 }
@@ -65,26 +65,26 @@ stages:
                     // Assisting variables
                     var secondsSinceStart = (currentTime-self.startTime)/1000;
                     var completedP1 = Math.floor(secondsSinceStart/3);
-                    var completedP2 = Math.floor(secondsSinceStart/2);
+                    var completedP2 = Math.floor(secondsSinceStart/3);
 
                     // Contact level update
-                    if ( completedP1 < (noOfCust*3) ) {
+                    if ( completedP1 < (noOfCust*2) ) {
                         self.currentStatus.P1_COMPLETED = completedP1;
-                        self.currentStatus.P1_PENDING = (noOfCust*3) - completedP1;
+                        self.currentStatus.P1_PENDING = (noOfCust*2) - completedP1;
                     } else {
                         self.currentStatus.P1_EXEC_STATUS = "completed";
-                        self.currentStatus.P1_COMPLETED = (noOfCust*3);
+                        self.currentStatus.P1_COMPLETED = (noOfCust*2);
                         self.currentStatus.P1_IN_PROCE = 0;
                         self.currentStatus.P1_PENDING = 0;
                     }
 
                     // Account level update
-                    if ( completedP2 < (noOfCust*4) ) {
+                    if ( completedP2 < (noOfCust*3) ) {
                         self.currentStatus.P2_COMPLETED = completedP2;
-                        self.currentStatus.P2_PENDING = (noOfCust*4) - completedP2;
+                        self.currentStatus.P2_PENDING = (noOfCust*3) - completedP2;
                     } else {
                         self.currentStatus.P2_EXEC_STATUS = "completed";
-                        self.currentStatus.P2_COMPLETED = noOfCust*4;
+                        self.currentStatus.P2_COMPLETED = noOfCust*3;
                         self.currentStatus.P2_IN_PROCE = 0;
                         self.currentStatus.P2_PENDING = 0;
                     }
@@ -117,12 +117,12 @@ stages:
                     P1_COMPLETED: 0,
                     P1_REJECTED: 0,
                     P1_IN_PROCE: 8,
-                    P1_PENDING: noOfCust * 3,
+                    P1_PENDING: noOfCust * 2,
                     P2_EXEC_STATUS: "running",
                     P2_COMPLETED: 0,
                     P2_REJECTED: 0,
                     P2_IN_PROCE: 8,
-                    P2_PENDING: noOfCust * 4,
+                    P2_PENDING: noOfCust * 3,
                     DURATION: currentTime - self.startTime
                   };
                 }
@@ -131,25 +131,25 @@ stages:
                   // Assisting variables
                   var secondsSinceStart = (currentTime - self.startTime) / 1000;
                   var completedP1 = Math.floor(secondsSinceStart / 3);
-                  var completedP2 = Math.floor(secondsSinceStart / 2); // Contact level update
+                  var completedP2 = Math.floor(secondsSinceStart / 3); // Contact level update
 
-                  if (completedP1 < noOfCust * 3) {
+                  if (completedP1 < noOfCust * 2) {
                     self.currentStatus.P1_COMPLETED = completedP1;
-                    self.currentStatus.P1_PENDING = noOfCust * 3 - completedP1;
+                    self.currentStatus.P1_PENDING = noOfCust * 2 - completedP1;
                   } else {
                     self.currentStatus.P1_EXEC_STATUS = "completed";
-                    self.currentStatus.P1_COMPLETED = noOfCust * 3;
+                    self.currentStatus.P1_COMPLETED = noOfCust * 2;
                     self.currentStatus.P1_IN_PROCE = 0;
                     self.currentStatus.P1_PENDING = 0;
                   } // Account level update
 
 
-                  if (completedP2 < noOfCust * 4) {
+                  if (completedP2 < noOfCust * 3) {
                     self.currentStatus.P2_COMPLETED = completedP2;
-                    self.currentStatus.P2_PENDING = noOfCust * 4 - completedP2;
+                    self.currentStatus.P2_PENDING = noOfCust * 3 - completedP2;
                   } else {
                     self.currentStatus.P2_EXEC_STATUS = "completed";
-                    self.currentStatus.P2_COMPLETED = noOfCust * 4;
+                    self.currentStatus.P2_COMPLETED = noOfCust * 3;
                     self.currentStatus.P2_IN_PROCE = 0;
                     self.currentStatus.P2_PENDING = 0;
                   } // Check if entire process is completed
@@ -181,169 +181,169 @@ stages:
             schema: '#ref'
   Stage 3:
     actors:
-      S2_LOAD_EXEC_STATUS:
+      S3_LOAD_EXEC_STATUS:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_LOAD_EXEC_STATUS=${@procStatus}'
+            const: set_global global 'k2_ws.S3_LOAD_EXEC_STATUS=${@procStatus}'
           procStatus:
             link: Completion Calc/result/EXEC_STATUS
             schema: string
             mandatory: false
-      S2_LOAD_COMPLETED:
+      S3_LOAD_COMPLETED:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_LOAD_COMPLETED=${@completed}'
+            const: set_global global 'k2_ws.S3_LOAD_COMPLETED=${@completed}'
           completed:
             link: Completion Calc/result/COMPLETED
             schema: integer
             mandatory: false
-      S2_LOAD_REJECTED:
+      S3_LOAD_REJECTED:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_LOAD_REJECTED=${@rejected}'
+            const: set_global global 'k2_ws.S3_LOAD_REJECTED=${@rejected}'
           rejected:
             link: Completion Calc/result/REJECTED
             schema: integer
             mandatory: false
-      S2_LOAD_IN_PROC:
+      S3_LOAD_IN_PROC:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_LOAD_IN_PROC=${@inProc}'
+            const: set_global global 'k2_ws.S3_LOAD_IN_PROC=${@inProc}'
           inProc:
             link: Completion Calc/result/IN_PROCE
             schema: integer
             mandatory: false
-      S2_LOAD_PENDING:
+      S3_LOAD_PENDING:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_LOAD_PENDING=${@pending}'
+            const: set_global global 'k2_ws.S3_LOAD_PENDING=${@pending}'
           pending:
             link: Completion Calc/result/PENDING
             schema: integer
             mandatory: false
-      S2_P1_EXEC_STATUS:
+      S3_P1_EXEC_STATUS:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P1_EXEC_STATUS=${@custExecStatus}'
+            const: set_global global 'k2_ws.S3_P1_EXEC_STATUS=${@custExecStatus}'
           custExecStatus:
             link: Completion Calc/result/P1_EXEC_STATUS
             schema: string
             mandatory: false
-      S2_P1_COMPLET:
+      S3_P1_COMPLET:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P1_COMPLET=${@custComplete}'
+            const: set_global global 'k2_ws.S3_P1_COMPLET=${@custComplete}'
           custComplete:
             link: Completion Calc/result/P1_COMPLETED
             schema: integer
             mandatory: false
-      S2_P1_REJECTED:
+      S3_P1_REJECTED:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P1_REJECTED=${@custRejected}'
+            const: set_global global 'k2_ws.S3_P1_REJECTED=${@custRejected}'
           custRejected:
             link: Completion Calc/result/P1_REJECTED
             schema: integer
             mandatory: false
-      S2_P1_IN_PROC:
+      S3_P1_IN_PROC:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P1_IN_PROC=${@custInProc}'
+            const: set_global global 'k2_ws.S3_P1_IN_PROC=${@custInProc}'
           custInProc:
             link: Completion Calc/result/P1_IN_PROCE
             schema: integer
             mandatory: false
-      S2_P1_PENDING:
+      S3_P1_PENDING:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P1_PENDING=${@custPending}'
+            const: set_global global 'k2_ws.S3_P1_PENDING=${@custPending}'
           custPending:
             link: Completion Calc/result/P1_PENDING
             schema: integer
             mandatory: false
   Stage 7:
     actors:
-      S2_P2_EXEC_STATUS:
+      S3_P2_EXEC_STATUS:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P2_EXEC_STATUS=${@acntExecStatus}'
+            const: set_global global 'k2_ws.S3_P2_EXEC_STATUS=${@acntExecStatus}'
           acntExecStatus:
             link: Completion Calc/result/P2_EXEC_STATUS
             schema: string
             mandatory: false
-      S2_P2_COMPLET:
+      S3_P2_COMPLET:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P2_COMPLET=${@acntComplete}'
+            const: set_global global 'k2_ws.S3_P1_COMPLET=${@acntComplete}'
           acntComplete:
             link: Completion Calc/result/P2_COMPLETED
             schema: integer
             mandatory: false
-      S2_P2_REJECTED:
+      S3_P2_REJECTED:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P2_REJECTED=${@acntRejected}'
+            const: set_global global 'k2_ws.S3_P2_REJECTED=${@acntRejected}'
           acntRejected:
             link: Completion Calc/result/P2_REJECTED
             schema: integer
             mandatory: false
-      S2_P2_IN_PROC:
+      S3_P2_IN_PROC:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P2_IN_PROC=${@acntInProc}'
+            const: set_global global 'k2_ws.S3_P2_IN_PROC=${@acntInProc}'
           acntInProc:
             link: Completion Calc/result/P2_IN_PROCE
             schema: integer
             mandatory: false
-      S2_P2_PENDING:
+      S3_P2_PENDING:
         parent: DbCommand
         in:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S2_P2_PENDING=${@acntPending}'
+            const: set_global global 'k2_ws.S3_P2_PENDING=${@acntPending}'
           acntPending:
             link: Completion Calc/result/P2_PENDING
             schema: integer

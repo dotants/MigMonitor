@@ -1,0 +1,110 @@
+stages:
+  Stage 1:
+    actors:
+      Init S3_LOAD_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_LOAD_EXEC_STATUS=N/A'
+      Init S3_LOAD_COMPLETED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_LOAD_COMPLETED=0'
+      Init S3_LOAD_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_LOAD_REJECTED=0'
+      Init S3_LOAD_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_LOAD_IN_PROC=0'
+      Init S3_LOAD_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_LOAD_PENDING=0'
+      Init S3_P1_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P1_EXEC_STATUS=N/A'
+      Init S3_P1_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P1_COMPLET=0'
+      Init S3_P1_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P1_REJECTED=0'
+      Init S3_P1_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P1_IN_PROC=0'
+      Init S3_P1_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P1_PENDING=0'
+  Stage 2:
+    actors:
+      Init S3_P2_EXEC_STATUS:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P2_EXEC_STATUS=N/A'
+      Init S3_P2_PENDING:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P2_PENDING=0'
+      Init S3_P2_IN_PROC:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P2_IN_PROC=0'
+      Init S3_P2_REJECTED:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P2_REJECTED=0'
+      Init S3_P2_COMPLET:
+        parent: DbCommand
+        in:
+          interface:
+            const: fabric
+          sql:
+            const: set_global global 'k2_ws.S3_P2_COMPLET=0'

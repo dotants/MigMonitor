@@ -1,0 +1,218 @@
+stages:
+  Stage 1:
+    actors:
+      S2_LOAD_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_LOAD_EXEC_STATUS
+            default: false
+      S2_LOAD_COMPLETED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_LOAD_COMPLETED
+            default: false
+      S2_LOAD_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_LOAD_REJECTED
+            default: false
+      S2_LOAD_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_LOAD_IN_PROC
+            default: false
+      S2_LOAD_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_LOAD_PENDING
+            default: false
+      S2_P1_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P1_EXEC_STATUS
+            default: false
+      S2_P1_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P1_COMPLET
+            default: false
+      S2_P1_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_CUST_REJECTED
+            default: false
+      S2_P1_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.SF_CUST_IN_PROC
+            default: false
+      S2_P1_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P1_PENDING
+            default: false
+  Stage 3:
+    actors:
+      S2_P2_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P2_EXEC_STATUS
+            default: false
+      S2_P2_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P2_COMPLET
+            default: false
+      S2_P2_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P2_REJECTED
+            default: false
+      S2_P2_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P2_IN_PROC
+            default: false
+      S2_P2_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S2_P2_PENDING
+            default: false
+  Stage 4:
+    actors:
+      Create Output Structure:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"S2 Load\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\",\r\n    \"subProcesses\": [ \
+              \ \r\n       { \"name\": \"S2 Part1\",\r\n         \"status\": \"${p1Status}\"\
+              ,\r\n         \"completed\": \"${p1CompCount}\",\r\n         \"rejected\"\
+              : \"${p1RejectedCount}\",\r\n         \"in process\": \"${p1InProcCount}\"\
+              ,\r\n         \"pending\": \"${p1PendingCount}\"\r\n       },\r\n  \
+              \     { \"name\": \"S2 Part2\",\r\n         \"status\": \"${p2Status}\"\
+              ,\r\n         \"completed\": \"${p2CompCount}\",\r\n         \"rejected\"\
+              : \"${p2RejectedCount}\",\r\n         \"in process\": \"${p2InProcCount}\"\
+              ,\r\n         \"pending\": \"${p2PendingCount}\"\r\n       }\r\n   \
+              \ ]\r\n}"
+          execStatus:
+            link: S2_LOAD_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          completedCount:
+            link: S2_LOAD_COMPLETED/result
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: S2_LOAD_REJECTED/result
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: S2_LOAD_IN_PROC/result
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: S2_LOAD_PENDING/result
+            schema: integer
+            mandatory: false
+          p1Status:
+            link: S2_P1_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          p1CompCount:
+            link: S2_P1_COMPLET/result
+            schema: string
+            mandatory: false
+          p1RejectedCount:
+            link: S2_P1_REJECTED/result
+            schema: string
+            mandatory: false
+          p1InProcCount:
+            link: S2_P1_IN_PROC/result
+            schema: string
+            mandatory: false
+          p1PendingCount:
+            link: S2_P1_PENDING/result
+            schema: string
+            mandatory: false
+          p2Status:
+            link: S2_P2_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          p2CompCount:
+            link: S2_P2_COMPLET/result
+            schema: string
+            mandatory: false
+          p2RejectedCount:
+            link: S2_P2_REJECTED/result
+            schema: string
+            mandatory: false
+          p2InProcCount:
+            link: S2_P2_IN_PROC/result
+            schema: string
+            mandatory: false
+          p2PendingCount:
+            link: S2_P2_PENDING/result
+            schema: string
+            mandatory: false
+  Stage 5:
+    actors:
+      Convert T o Object:
+        parent: JsonParser
+        in:
+          stream:
+            link: Create Output Structure/string
+        out:
+          object:
+            external: sfLoadStatus
+            schema: '#ref'
+schemas:
+  Convert T o Object.out.object:
+    type: object
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+      completed:
+        type: string
+      rejected:
+        type: string
+      in process:
+        type: string
+      pending:
+        type: string
+      subProcesses:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            status:
+              type: string
+            completed:
+              type: string
+            rejected:
+              type: string
+            in process:
+              type: string
+            pending:
+              type: string

@@ -20,12 +20,12 @@
     <ProjectItemProp>
       <NodeName>initSfCounters.flow</NodeName>
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\initSfCounters.flow</RelativePath>
-      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows@initProcess</CategoryKey>
     </ProjectItemProp>
     <ProjectItemProp>
       <NodeName>initDsCounters.flow</NodeName>
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\initDsCounters.flow</RelativePath>
-      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows@initProcess</CategoryKey>
     </ProjectItemProp>
     <ProjectItemProp>
       <NodeName>dsLoadDummyProc.flow</NodeName>
@@ -45,13 +45,80 @@
     <ProjectItemProp>
       <NodeName>initS2Counters.flow</NodeName>
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\initS2Counters.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows@initProcess</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>initS3Counters.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\initS3Counters.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows@initProcess</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s3LoadDummyProc.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s3LoadDummyProc.flow</RelativePath>
       <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>sfLoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\sfLoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s1LoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s1LoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s2LoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s2LoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>ponrStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\ponrStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>extractStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\extractStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>dsLoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\dsLoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>genIdList.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\genIdList.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@Utility</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>getMigExecId.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\getMigExecId.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@Utility</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>removeFailedFromList.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\removeFailedFromList.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@Utility</CategoryKey>
     </ProjectItemProp>
   </ProjectItemPropList>
   <ProjectItemsCategoryList>
     <ProjectItemsCategory>
       <Name>dummyMigFlows</Name>
       <Key>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</Key>
+    </ProjectItemsCategory>
+    <ProjectItemsCategory>
+      <Name>initProcess</Name>
+      <Key>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows@initProcess</Key>
+    </ProjectItemsCategory>
+    <ProjectItemsCategory>
+      <Name>loadStatus</Name>
+      <Key>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</Key>
+    </ProjectItemsCategory>
+    <ProjectItemsCategory>
+      <Name>Utility</Name>
+      <Key>Implementation\LogicalUnits\MigDummy\Broadway@Utility</Key>
     </ProjectItemsCategory>
   </ProjectItemsCategoryList>
 </ProjectItemsProperties>
