@@ -37,6 +37,16 @@
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s1dummyEntOrch.flow</RelativePath>
       <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
     </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s2LoadDummyProc.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s2LoadDummyProc.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>initS2Counters.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\initS2Counters.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
   </ProjectItemPropList>
   <ProjectItemsCategoryList>
     <ProjectItemsCategory>

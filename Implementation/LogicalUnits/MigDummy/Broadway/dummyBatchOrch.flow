@@ -26,6 +26,11 @@ stages:
         in:
           flowName:
             const: initDsCounters
+      initS2Counters:
+        parent: InnerFlow
+        in:
+          flowName:
+            const: initS2Counters
   Stage 2:
     actors:
       Set new EXEC_ID:
@@ -158,6 +163,15 @@ stages:
         out:
           newIdList:
             schema: string
+      S2 Load UID:
+        parent: StringFormat
+        in:
+          format:
+            const: s2LoadDummyProc_${execId}
+          execId:
+            link: 'getMigExecId: InnerFlow/execId/execId'
+            schema: integer
+            mandatory: false
   PONR:
     actors:
       SF Load Wait:
@@ -201,6 +215,18 @@ stages:
         out:
           result:
             schema: '#ref'
+      S2 Load Process:
+        parent: BroadwayJob
+        in:
+          flowName:
+            const: s2LoadDummyProc
+          uid:
+            const: null
+            link: S2 Load UID/string
+          noOfCust:
+            link: MathAdd1/result
+            schema: integer
+            mandatory: false
   Stage 5:
     actors:
       S1 Batch Wait:

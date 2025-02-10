@@ -52,7 +52,8 @@ stages:
                                          PROD_COMPLETED: 0,
                                          PROD_REJECTED: 0,
                                          PROD_IN_PROCE: 8,
-                                         PROD_PENDING: Math.floor(noOfCust*1.8)
+                                         PROD_PENDING: Math.floor(noOfCust*1.8),
+                                         DURATION: currentTime - self.startTime
                                          };
               }
 
@@ -97,6 +98,7 @@ stages:
                        self.currentStatus.PENDING = noOfCust - self.currentStatus.COMPLETED;
                    }
               }
+              self.currentStatus.DURATION = currentTime - self.startTime;
 
               self.currentStatus;
 
