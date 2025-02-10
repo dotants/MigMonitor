@@ -32,6 +32,11 @@
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\dsLoadDummyProc.flow</RelativePath>
       <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
     </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s1dummyEntOrch.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s1dummyEntOrch.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
   </ProjectItemPropList>
   <ProjectItemsCategoryList>
     <ProjectItemsCategory>

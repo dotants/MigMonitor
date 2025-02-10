@@ -1,0 +1,37 @@
+stages:
+  Stage 1:
+    actors:
+      Split values list:
+        parent: Split
+        in:
+          string:
+            external: idList
+  Stage 2:
+    actors:
+      Counter:
+        parent: Count
+        out:
+          value:
+            schema: integer
+      Concat new IdList:
+        parent: StringBuild
+        in:
+          input:
+            link:
+              path: Split values list/strings
+              iterate: Iterate
+        out:
+          string:
+            external: newIdList
+  Stage 3:
+    actors:
+      GreaterThanEquals1:
+        parent: GreaterThanEquals
+        condition: result
+        in:
+          a:
+            link: Counter/value
+          b:
+            external: listLength
+      LoopStop1:
+        parent: LoopStop

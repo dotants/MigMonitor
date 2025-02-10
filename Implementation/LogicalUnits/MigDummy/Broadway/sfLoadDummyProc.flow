@@ -14,6 +14,8 @@ stages:
         in:
           flowName:
             const: initSfCounters
+      Now1:
+        parent: Now
   Stage 2:
     actors:
       dummy:
@@ -31,7 +33,7 @@ stages:
         parent: Now
   Stage 6:
     actors:
-      JavaScript1:
+      Completion Calc:
         parent: JavaScript
         in:
           script:
@@ -39,7 +41,6 @@ stages:
               userCode: |+
                 if ( contextLoop.index() == 0 ) {
                     self.startTime = currentTime;
-                    self.currTime = currentTime;
                     self.currentStatus = { EXEC_STATUS:"running",
                                            COMPLETED: 0,
                                            REJECTED: 0,
@@ -59,15 +60,16 @@ stages:
                                            ADRS_COMPLETED: 0,
                                            ADRS_REJECTED: 0,
                                            ADRS_IN_PROCE: 8,
-                                           ADRS_PENDING: noOfCust*3
+                                           ADRS_PENDING: noOfCust*3,
+                                           DURATION: currentTime - self.startTime
                                            };
                 }
 
                 // Assisting variables
                 var secondsSinceStart = (currentTime-self.startTime)/1000;
-                var completedCustomers = Math.floor(secondsSinceStart/10);
-                var completedAccounts = Math.floor(secondsSinceStart/12);
-                var completedAddress = Math.floor(secondsSinceStart/9);
+                var completedCustomers = Math.floor(secondsSinceStart/7);
+                var completedAccounts = Math.floor(secondsSinceStart/6);
+                var completedAddress = Math.floor(secondsSinceStart/4);
                 var completed = Math.min( completedCustomers, Math.floor(completedAccounts/2) , Math.floor(completedAddress/3));
                 var pending = Math.max(0, noOfCust - completed);
 
@@ -121,6 +123,7 @@ stages:
                      self.currentStatus.ADRS_EXEC_STATUS == "completed" ) {
                          self.currentStatus.EXEC_STATUS = "completed";
                      }
+                self.currentStatus.DURATION = currentTime - self.startTime;
 
                 self.currentStatus;
 
@@ -128,7 +131,6 @@ stages:
               script: |-
                 if (contextLoop.index() == 0) {
                   self.startTime = currentTime;
-                  self.currTime = currentTime;
                   self.currentStatus = {
                     EXEC_STATUS: "running",
                     COMPLETED: 0,
@@ -149,15 +151,16 @@ stages:
                     ADRS_COMPLETED: 0,
                     ADRS_REJECTED: 0,
                     ADRS_IN_PROCE: 8,
-                    ADRS_PENDING: noOfCust * 3
+                    ADRS_PENDING: noOfCust * 3,
+                    DURATION: currentTime - self.startTime
                   };
                 } // Assisting variables
 
 
                 var secondsSinceStart = (currentTime - self.startTime) / 1000;
-                var completedCustomers = Math.floor(secondsSinceStart / 10);
-                var completedAccounts = Math.floor(secondsSinceStart / 12);
-                var completedAddress = Math.floor(secondsSinceStart / 9);
+                var completedCustomers = Math.floor(secondsSinceStart / 7);
+                var completedAccounts = Math.floor(secondsSinceStart / 6);
+                var completedAddress = Math.floor(secondsSinceStart / 4);
                 var completed = Math.min(completedCustomers, Math.floor(completedAccounts / 2), Math.floor(completedAddress / 3));
                 var pending = Math.max(0, noOfCust - completed); // Process level update
 
@@ -209,6 +212,7 @@ stages:
                   self.currentStatus.EXEC_STATUS = "completed";
                 }
 
+                self.currentStatus.DURATION = currentTime - self.startTime;
                 self.currentStatus;
           noOfCust:
             external: noOfCust
@@ -231,7 +235,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_LOAD_EXEC_STATUS=${@procStatus}'
           procStatus:
-            link: JavaScript1/result/EXEC_STATUS
+            link: Completion Calc/result/EXEC_STATUS
             schema: string
             mandatory: false
       SF_LOAD_COMPLETED:
@@ -242,7 +246,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_LOAD_COMPLETED=${@completed}'
           completed:
-            link: JavaScript1/result/COMPLETED
+            link: Completion Calc/result/COMPLETED
             schema: integer
             mandatory: false
       SF_LOAD_REJECTED:
@@ -253,7 +257,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_LOAD_REJECTED=${@rejected}'
           rejected:
-            link: JavaScript1/result/REJECTED
+            link: Completion Calc/result/REJECTED
             schema: integer
             mandatory: false
       SF_LOAD_IN_PROC:
@@ -264,7 +268,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_LOAD_IN_PROC=${@inProc}'
           inProc:
-            link: JavaScript1/result/IN_PROCE
+            link: Completion Calc/result/IN_PROCE
             schema: integer
             mandatory: false
       SF_LOAD_PENDING:
@@ -275,7 +279,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_LOAD_PENDING=${@pending}'
           pending:
-            link: JavaScript1/result/PENDING
+            link: Completion Calc/result/PENDING
             schema: integer
             mandatory: false
       SF_CUST_EXEC_STATUS:
@@ -286,7 +290,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_CUST_EXEC_STATUS=${@custExecStatus}'
           custExecStatus:
-            link: JavaScript1/result/CUST_EXEC_STATUS
+            link: Completion Calc/result/CUST_EXEC_STATUS
             schema: string
             mandatory: false
       SF_CUST_COMPLET:
@@ -297,7 +301,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_CUST_COMPLET=${@custComplete}'
           custComplete:
-            link: JavaScript1/result/CUST_COMPLETED
+            link: Completion Calc/result/CUST_COMPLETED
             schema: integer
             mandatory: false
       SF_CUST_REJECTED:
@@ -308,7 +312,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_CUST_REJECTED=${@custRejected}'
           custRejected:
-            link: JavaScript1/result/CUST_REJECTED
+            link: Completion Calc/result/CUST_REJECTED
             schema: integer
             mandatory: false
       SF_CUST_IN_PROC:
@@ -319,7 +323,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_CUST_IN_PROC=${@custInProc}'
           custInProc:
-            link: JavaScript1/result/CUST_IN_PROCE
+            link: Completion Calc/result/CUST_IN_PROCE
             schema: integer
             mandatory: false
       SF_CUST_PENDING:
@@ -330,7 +334,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_CUST_PENDING=${@custPending}'
           custPending:
-            link: JavaScript1/result/CUST_PENDING
+            link: Completion Calc/result/CUST_PENDING
             schema: integer
             mandatory: false
   Stage 7:
@@ -343,7 +347,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ACNT_EXEC_STATUS=${@acntExecStatus}'
           acntExecStatus:
-            link: JavaScript1/result/ACNT_EXEC_STATUS
+            link: Completion Calc/result/ACNT_EXEC_STATUS
             schema: string
             mandatory: false
       SF_ACNT_COMPLET:
@@ -354,7 +358,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ACNT_COMPLET=${@acntComplete}'
           acntComplete:
-            link: JavaScript1/result/ACNT_COMPLETED
+            link: Completion Calc/result/ACNT_COMPLETED
             schema: integer
             mandatory: false
       SF_ADRS_EXEC_STATUS:
@@ -365,7 +369,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ADRS_EXEC_STATUS=${@adrsExecStatus}'
           adrsExecStatus:
-            link: JavaScript1/result/ADRS_EXEC_STATUS
+            link: Completion Calc/result/ADRS_EXEC_STATUS
             schema: string
             mandatory: false
       SF_ACNT_REJECTED:
@@ -376,7 +380,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ACNT_REJECTED=${@acntRejected}'
           acntRejected:
-            link: JavaScript1/result/ACNT_REJECTED
+            link: Completion Calc/result/ACNT_REJECTED
             schema: integer
             mandatory: false
       SF_ACNT_IN_PROC:
@@ -387,7 +391,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ACNT_IN_PROC=${@acntInProc}'
           acntInProc:
-            link: JavaScript1/result/ACNT_IN_PROCE
+            link: Completion Calc/result/ACNT_IN_PROCE
             schema: integer
             mandatory: false
       SF_ACNT_PENDING:
@@ -398,7 +402,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ACNT_PENDING=${@acntPending}'
           acntPending:
-            link: JavaScript1/result/ACNT_PENDING
+            link: Completion Calc/result/ACNT_PENDING
             schema: integer
             mandatory: false
       SF_ADRS_COMPLET:
@@ -409,7 +413,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ADRS_COMPLET=${@adrsComplete}'
           adrsComplete:
-            link: JavaScript1/result/ADRS_COMPLETED
+            link: Completion Calc/result/ADRS_COMPLETED
             schema: integer
             mandatory: false
       SF_ADRS_REJECTED:
@@ -420,7 +424,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ADRS_REJECTED=${@adrsRejected}'
           adrsRejected:
-            link: JavaScript1/result/ADRS_REJECTED
+            link: Completion Calc/result/ADRS_REJECTED
             schema: integer
             mandatory: false
       SF_ADRS_IN_PROC:
@@ -431,7 +435,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ADRS_IN_PROC=${@adrsInProc}'
           adrsInProc:
-            link: JavaScript1/result/ADRS_IN_PROCE
+            link: Completion Calc/result/ADRS_IN_PROCE
             schema: integer
             mandatory: false
       SF_ADRS_PENDING:
@@ -442,7 +446,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.SF_ADRS_PENDING=${@adrsPending}'
           adrsPending:
-            link: JavaScript1/result/ADRS_PENDING
+            link: Completion Calc/result/ADRS_PENDING
             schema: integer
             mandatory: false
   Stage 4:
@@ -457,7 +461,7 @@ stages:
             const: completed
             schema: string
           a:
-            link: JavaScript1/result/EXEC_STATUS
+            link: Completion Calc/result/EXEC_STATUS
       Loop Stop:
         parent: LoopStop
     split: '--------------------'
@@ -468,12 +472,21 @@ stages:
     actors:
       Sleep 1 second:
         parent: Sleep
+  Stage 1:
+    actors:
+      DateDuration1:
+        parent: DateDuration
+        in:
+          from:
+            link: Now1/date
+          to:
+            link: Current time/date
 schemas:
   While1.out.result:
     type: array
     items:
       type: integer
-  JavaScript1.out.result:
+  Completion Calc.out.result:
     type: object
     properties:
       EXEC_STATUS:
@@ -516,3 +529,5 @@ schemas:
         type: integer
       ADRS_PENDING:
         type: number
+      DURATION:
+        type: integer
