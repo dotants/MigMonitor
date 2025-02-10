@@ -105,6 +105,24 @@ public class Logic extends WebServiceUserCode {
 		return fabric().fetch("broadway MigDummy.s2LoadStatus execId='"+execId+"'");
 	}
 
+
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	public static Object wsS3LoadStatus(String execId) throws Exception {
+		return fabric().fetch("broadway MigDummy.s3LoadStatus execId='"+execId+"' wsName='wsS3LoadStatus'");
+	}
+
+
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	public static Object wsS3P1Status(String execId) throws Exception {
+		return fabric().fetch("broadway MigDummy.s3LoadStatus execId='"+execId+"' wsName='wsS3P1Status'");
+	}
+
+
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	public static Object wsS3P2Status(String execId) throws Exception {
+		return fabric().fetch("broadway MigDummy.s3LoadStatus execId='"+execId+"' wsName='wsS3P2Status'");
+	}
+
 	
 	
 

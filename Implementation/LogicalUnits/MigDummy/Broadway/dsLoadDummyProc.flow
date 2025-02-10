@@ -124,6 +124,7 @@ stages:
           sql:
             const: set_global global 'k2_ws.DS_LOAD_EXEC_STATUS=${@procStatus}'
           procStatus:
+            link: Calc status/result/EXEC_STATUS
             schema: string
             mandatory: false
       DS_LOAD_COMPLETED:

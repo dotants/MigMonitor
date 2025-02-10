@@ -1,0 +1,275 @@
+stages:
+  Stage 1: {
+    }
+  Stage 3: {
+    }
+  wsS3LoadStatus:
+    dependsOn: Stage 3
+    actors:
+      WS Name wsS3LoadStatus:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: wsS3LoadStatus
+            schema: string
+          a:
+            external: wsName
+      S3_LOAD_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_LOAD_EXEC_STATUS
+            default: false
+      S3_LOAD_COMPLETED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_LOAD_COMPLETED
+            default: false
+      S3_LOAD_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_LOAD_REJECTED
+            default: false
+      S3_LOAD_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_LOAD_IN_PROC
+            default: false
+      S3_LOAD_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_LOAD_PENDING
+            default: false
+    split: '--------------------'
+  wsS3P1Status:
+    dependsOn: Stage 3
+    actors:
+      WS Name wsS3P1Status:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: wsS3P1Status
+            schema: string
+          a:
+            external: wsName
+      S3_P1_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P1_EXEC_STATUS
+            default: false
+      S3_P1_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P1_COMPLET
+            default: false
+      S3_P1_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P1_REJECTED
+            default: false
+      S3_P1_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P1_IN_PROC
+            default: false
+      S3_P1_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P1_PENDING
+            default: false
+    split: '--------------------'
+  wsS3P2Status:
+    dependsOn: Stage 3
+    actors:
+      WS Name wsS3P2Status:
+        parent: EqualsIgnoreCase
+        condition: result
+        in:
+          b:
+            const: wsS3P2Status
+            schema: string
+          a:
+            external: wsName
+      S3_P2_EXEC_STATUS:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P2_EXEC_STATUS
+            default: false
+      S3_P2_COMPLET:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P2_COMPLET
+            default: false
+      S3_P2_REJECTED:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P2_REJECTED
+            default: false
+      S3_P2_IN_PROC:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P2_IN_PROC
+            default: false
+      S3_P2_PENDING:
+        parent: FabricSetRead
+        in:
+          key:
+            const: k2_ws.S3_P2_PENDING
+            default: false
+  Stage 2:
+    dependsOn: wsS3LoadStatus
+    actors:
+      Overall Load Status:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"S3 Load\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\"\r\n}"
+          execStatus:
+            link: S3_LOAD_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          completedCount:
+            link: S3_LOAD_COMPLETED/result
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: S3_LOAD_REJECTED/result
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: S3_LOAD_IN_PROC/result
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: S3_LOAD_PENDING/result
+            schema: integer
+            mandatory: false
+    split: '--------------------'
+  Stage 4:
+    dependsOn: wsS3P1Status
+    actors:
+      Contact Load Status:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"DS Contact\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\"\r\n}"
+          execStatus:
+            link: S3_P1_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          completedCount:
+            link: S3_P1_COMPLET/result
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: S3_P1_REJECTED/result
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: S3_P1_IN_PROC/result
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: S3_P1_PENDING/result
+            schema: integer
+            mandatory: false
+    split: '--------------------'
+  Stage 6:
+    dependsOn: wsS3P2Status
+    actors:
+      Product Load Status:
+        parent: StringFormat
+        in:
+          format:
+            const: "{ \r\n   \"name\": \"DS Product\",\r\n   \"status\" : \"${execStatus}\"\
+              ,\r\n    \"completed\": \"${completedCount}\",\r\n    \"rejected\":\
+              \ \"${rejectedCount}\",\r\n    \"in process\": \"${inProcCount}\",\r\
+              \n    \"pending\": \"${pendingCount}\"\r\n}"
+          execStatus:
+            link: S3_P2_EXEC_STATUS/result
+            schema: string
+            mandatory: false
+          completedCount:
+            link: S3_P2_COMPLET/result
+            schema: integer
+            mandatory: false
+          rejectedCount:
+            link: S3_P2_REJECTED/result
+            schema: integer
+            mandatory: false
+          inProcCount:
+            link: S3_P2_IN_PROC/result
+            schema: integer
+            mandatory: false
+          pendingCount:
+            link: S3_P2_PENDING/result
+            schema: integer
+            mandatory: false
+  Stage 5:
+    actors:
+      Convert T o Object:
+        parent: JsonParser
+        in:
+          stream:
+            link:
+            - Overall Load Status/string
+            - Contact Load Status/string
+            - Product Load Status/string
+        out:
+          object:
+            external: s3LoadStatus
+            schema: '#ref'
+schemas:
+  Convert T o Object.out.object:
+    type: object
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+      completed:
+        type: string
+      rejected:
+        type: string
+      in process:
+        type: string
+      pending:
+        type: string
+      subProcesses:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            status:
+              type: string
+            completed:
+              type: string
+            rejected:
+              type: string
+            in process:
+              type: string
+            pending:
+              type: string

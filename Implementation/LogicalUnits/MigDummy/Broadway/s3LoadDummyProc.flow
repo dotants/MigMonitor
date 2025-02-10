@@ -310,7 +310,7 @@ stages:
           interface:
             const: fabric
           sql:
-            const: set_global global 'k2_ws.S3_P1_COMPLET=${@acntComplete}'
+            const: set_global global 'k2_ws.S3_P2_COMPLET=${@acntComplete}'
           acntComplete:
             link: Completion Calc/result/P2_COMPLETED
             schema: integer

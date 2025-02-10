@@ -102,6 +102,11 @@
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\removeFailedFromList.flow</RelativePath>
       <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@Utility</CategoryKey>
     </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s3LoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s3LoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
   </ProjectItemPropList>
   <ProjectItemsCategoryList>
     <ProjectItemsCategory>
