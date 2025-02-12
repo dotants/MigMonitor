@@ -58,16 +58,16 @@ stages:
             const: |-
               var ponrStatus = { "name": "PONR",
                                  "status" :    "TBD",
-                                 "completed":  0,
-                                 "rejected":   0,
-                                 "in process": 0,
-                                 "pending":    0
+                                 "completed":  "N/A",
+                                 "rejected":   "N/A",
+                                 "in process": "N/A",
+                                 "pending":    "N/A"
                                };
 
 
               if ( sfJobStatus == undefined || sfJobStatus == null || sfJobStatus == "" ||
                    dsJobStatus == undefined || dsJobStatus == null || dsJobStatus == "" ) {
-                      ponrStatus["status"] = "unknown";
+                      ponrStatus["status"] = "pending";
               } else if ( sfJobStatus == "WAITING" || sfJobStatus == "IN_PROCESS" || sfJobStatus == "SCHEDULED" || sfJobStatus == "RESTART" ) {
                       ponrStatus["status"] = "running";
               } else if ( sfJobStatus == "PROCESSED" ) {
