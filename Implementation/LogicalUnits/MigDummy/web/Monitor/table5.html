@@ -11,7 +11,11 @@
         margin: 20px;
         background-color: #f4f4f9;
     }
-
+    #loading {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 20px;
+    }
     table {
         width: 50%;
         border-collapse: collapse;
@@ -19,7 +23,6 @@
         background-color: #fff;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-
     th, td {
         border: 1px solid #ddd;
         padding: 0.3vh;
@@ -27,63 +30,51 @@
         white-space: nowrap;
         font-size: 13px;
     }
-
     th {
         background-color: #1483F3;
         color: white;
     }
-
     tr:nth-child(even) {
         background-color: #f2f2f2;
     }
-
     tr:hover {
         background-color: #ddd;
     }
-
     /* Styling for additional tables if needed */
     .details-table {
         width: 100%;
         margin-top: 10px;
         border-collapse: collapse;
     }
-
     .details-table th, .details-table td {
         border: 1px solid #ddd;
         padding: 8px;
     }
-
     .details-table th {
         background-color: #6bbfe6;
     }
-
     .details-row td {
         background-color: #f9f9f9;
         padding: 0;
     }
-    
     /* Example element styling */
     #my-element {
         padding: 10px;
         background-color: lightblue;
         border: 1px solid blue;
     }
-    
     /* Additional classes for the dynamic table */
     .main-row {
         /* Pointer will be used only when there are SUB steps */
     }
-    
     .sub-header {
         background-color: #3382d1;
         color: #fff;
         font-weight: bold;
     }
-    
     .separator-row {
         background-color: #ccc;
     }
-    
     .spacer-row td {
         border: none;
         height: 20px;
@@ -91,8 +82,12 @@
   </style>
 </head>
 <body>
+  <!-- Loading indicator -->
+  <div id="loading">Loading data, please wait...</div>
+  <h3 id="Exec_ID" style="color: #1483F3;">Run Number: 0</h3>
+
   <!-- Table structure -->
-  <table id="sfTable">
+  <table id="sfTable" style="display:none;">
     <thead>
       <tr>
         <th>Name</th>
@@ -165,9 +160,11 @@
      * Fetches API response for a given API name.
      */
     async function fetchApiResponse(apiName) {
-        const wsExecId = await k2api.invokeFabricWebService("wsExecId", { token: "", format: "json" }, "GET");
-        console.log("ExecId = "+ wsExecId.execId);
-        
+      // First, get an execId to pass along
+      const wsExecId = await k2api.invokeFabricWebService("wsExecId", { token: "", format: "json" }, "GET");
+      console.log("ExecId = " + wsExecId.execId);
+      let Exec_IdEl = document.getElementById('Exec_ID')
+      Exec_IdEl.innerHTML= "Run Number:" + wsExecId.execId;
       return await k2api.invokeFabricWebService(apiName, { token: "", execId: wsExecId.execId }, "GET");
     }
 
@@ -192,9 +189,6 @@
 
     /**
      * Builds the table based on the grouped steps and API responses.
-     * For each MAIN step with SUB steps, it adds a sub-header row, multiple SUB rows,
-     * a separator row, and a spacer row for visual separation.
-     * If a MAIN step has no SUB, no click event is attached.
      */
     function buildTable(groupedSteps, responses) {
       const tableBody = document.querySelector("#sfTable tbody");
@@ -212,10 +206,10 @@
         if (!parsedMain) {
           parsedMain = {
             name: main["Step Name"],
-            completed: "-",
-            rejected: "-",
-            inProcess: "-",
-            pending: "-",
+            completed: "0",
+            rejected: "0",
+            inProcess: "0",
+            pending: "0",
             subProcesses: []
           };
         }
@@ -281,10 +275,10 @@
             if (!parsedSub) {
               parsedSub = {
                 name: sub["Step Name"],
-                completed: "-",
-                rejected: "-",
-                inProcess: "-",
-                pending: "-"
+                completed: "0",
+                rejected: "0",
+                inProcess: "0",
+                pending: "0"
               };
             }
             const subRow = document.createElement("tr");
@@ -443,14 +437,29 @@
     
     (async function() {
       try {
-        const steps = await k2api.invokeFabricWebService("wsMonitorConfig", { token: "", format: "json" }, "GET");
-        console.log("Steps:", JSON.stringify(steps));
+        let steps, responses;
+        // Check if cached data exists in localStorage
+        if (localStorage.getItem('cachedSteps') && localStorage.getItem('cachedResponses')) {
+          steps = JSON.parse(localStorage.getItem('cachedSteps'));
+          responses = JSON.parse(localStorage.getItem('cachedResponses'));
+          console.log("Loaded cached steps and responses from localStorage.");
+        } else {
+          // First, fetch all steps and responses from API
+          steps = await k2api.invokeFabricWebService("wsMonitorConfig", { token: "", format: "json" }, "GET");
+          responses = await fetchAllApiResponses(steps);
+          // Save fetched data to localStorage
+          localStorage.setItem('cachedSteps', JSON.stringify(steps));
+          localStorage.setItem('cachedResponses', JSON.stringify(responses));
+        }
         
+        // Build table based on fetched data
         const groupedSteps = groupSteps(steps);
-        const responses = await fetchAllApiResponses(steps);
         buildTable(groupedSteps, responses);
-        
-        // Set up automatic refresh for each step based on its refresh interval
+        // Hide the loading indicator and show the table
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("sfTable").style.display = "table";
+
+        // Now, set up automatic refresh for each step based on its refresh interval
         steps.forEach(step => {
           if (step["API Name"] && step["Refresh interval"]) {
             const interval = parseInt(step["Refresh interval"], 10) * 1000;
@@ -458,6 +467,9 @@
               console.log("Refreshing step:", step["Step Name"]);
               const updatedResponse = await fetchApiResponse(step["API Name"]);
               updateTableRowForStep(step, updatedResponse);
+              // Update the cached responses and save to localStorage
+              responses[step["API Name"]] = updatedResponse;
+              localStorage.setItem('cachedResponses', JSON.stringify(responses));
             }, interval);
           }
         });
@@ -466,14 +478,18 @@
       }
     })();
   </script>
-  <script src ="test3.js"></script>
+  <script src="test3.js"></script>
  
   <script>
     window.onload = function () {
       window.k2api = window.k2api || window.parent.k2api;
-      window.k2api.setNavigationMenu([{ name: 'Table', path: '/table5.html' },/* { name: 'Run2', path: '/index2.html' },{ name: 'Run3', path: '/index3.html' },*/{ name: 'Diagram', path: '/table6.html' }]);
-      
-  };
+      window.k2api.setNavigationMenu([
+        { name: 'Table', path: '/table5.html' },
+        /* { name: 'Run2', path: '/index2.html' },
+           { name: 'Run3', path: '/index3.html' }, */
+        { name: 'Diagram', path: '/table6.html' }
+      ]);
+    };
   </script>
 </body>
 </html>
