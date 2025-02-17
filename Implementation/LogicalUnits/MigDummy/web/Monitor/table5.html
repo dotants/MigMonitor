@@ -165,7 +165,10 @@
      * Fetches API response for a given API name.
      */
     async function fetchApiResponse(apiName) {
-      return await k2api.invokeFabricWebService(apiName, { token: "", execId: 1 }, "GET");
+        const wsExecId = await k2api.invokeFabricWebService("wsExecId", { token: "", format: "json" }, "GET");
+        console.log("ExecId = "+ wsExecId.execId);
+        
+      return await k2api.invokeFabricWebService(apiName, { token: "", execId: wsExecId.execId }, "GET");
     }
 
     /**
