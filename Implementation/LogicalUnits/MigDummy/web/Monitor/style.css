@@ -1,0 +1,337 @@
+
+*{
+	
+	box-sizing: border-box;
+}
+  body {
+    color: var(--default-text-color);
+    font-family: "Roboto", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background-color: var(--bg-color);
+  }
+  
+
+
+  div,
+  span,
+  button,
+  li {
+
+    user-select: none;
+  }
+  
+  p {
+    font-size: 14px;
+    user-select: text;
+    margin: 10px;
+  }
+  
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--primary-color);
+    font-size: 3.5vh;
+    font-family: "Nunito","Roboto", sans-serif;
+  }
+  
+
+.graph {
+  font:normal 100%/150% arial,helvetica,sans-serif;
+  display: block;
+}
+
+.graph caption {
+	font:bold 150%/120% arial,helvetica,sans-serif;
+	padding-bottom:0.33em;
+}
+
+.graph tbody th {
+	text-align:right;
+}
+.container{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-row: auto auto;
+  grid-column-gap: 20px;
+  grid-row-gap: 12vw;
+}
+@supports (display:grid) {
+
+
+	@media (min-width:32em) {
+
+		.graph {
+			display:block;
+      		width:50vw;
+      		height:40vh;
+		}
+
+		.graph caption {
+			display:block;
+			font-size: 3.5vh;
+		}
+
+		.graph thead {
+			display:none;
+		}
+
+		.graph tbody {
+			position:relative;
+			display:grid;
+			grid-template-columns:repeat(auto-fit, minmax(2em, 1fr));
+			column-gap:2.5%;
+			align-items:end;
+			height:26vh;
+			margin:3em 0 1em 2.8em;
+			padding:0 1em;
+			border-bottom:2px solid rgba(0,0,0,0.5);
+			background:repeating-linear-gradient(
+				180deg,
+				rgba(170,170,170,0.7) 0,
+				rgba(170,170,170,0.7) 1px,
+				transparent 1px,
+				transparent 20%
+			);
+		}
+
+		.graph tbody:before,
+		.graph tbody:after {
+			position:absolute;
+			left:-3.2em;
+			width:2.8em;
+			text-align:right;
+			font:bold 80%/120% arial,helvetica,sans-serif;
+		}
+
+		.graph tbody:before {
+			content:"100%";
+			top:-0.6em;
+		}
+
+		.graph tbody:after {
+			content:"0%";
+			bottom:-0.6em;
+		}
+
+		.graph tr {
+			position:relative;
+			display:block;
+		}
+
+		.graph th,
+		.graph td {
+			display:block;
+			text-align:center;
+		}
+
+		.graph tbody th {
+			position:absolute;
+			top:-3em;
+			left:0;
+			width:100%;
+			font-size: 1.9vh;
+			font-size: 1.05vw;
+			text-align:center;
+      		white-space:nowrap;
+			text-indent:0;
+			transform:rotate(-0deg);
+		}
+
+		.graph tbody th:after {
+			content:"";
+		}
+
+		.graph td {
+			width:100%;
+			height:100%;
+			background:#1c85f4;
+			border-radius:0.5em 0.5em 0 0;
+			transition:background 0.5s;
+		}
+	
+		.graph tr:hover td {
+			opacity:0.7;
+		}
+
+		.graph td span {
+			overflow:hidden;
+			position:absolute;
+			left:50%;
+			top:50%;
+			width:0;
+			padding:0.5em 0;
+			font:normal 85%/120% arial,helvetica,sans-serif;
+			font-weight:bold;
+			opacity:0;
+			transition:opacity 0.5s;
+     		 color:white;
+		}
+
+		.toggleGraph:checked + table td span,
+		.graph tr:hover td span {
+			width:4em;
+			margin-left:-2em; 
+			opacity:1;
+		}
+
+	} /* min-width:32em */
+
+} /* grid only */
+
+
+
+ .tables {
+    border-collapse: collapse;		
+    width: 33%;
+    border-radius: 15px;
+    border-style: hidden; 
+    box-shadow: 0 0 0 1px #666;
+    flex-wrap: wrap;
+	
+}
+ .tables th {
+  font-size: 1.05vh;
+  font-size: 1.05vw;
+  text-align: left;
+  border-bottom: 1px solid #DDD;
+  border-top: 1px solid #DDD;
+  border-right: 1px solid #DDD;
+  border-left: 1px solid #DDD;
+  border-radius: 15px;
+}
+.tables td {
+	font-size: 1.05vh;
+	font-size: 1.05vw;	
+  	text-align: center;
+    border-bottom: 1px solid #DDD;
+    border-top: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    border-left: 1px solid #DDD;
+    border-radius: 15px 0 0 0;  
+}
+ .tables tr:hover {
+
+  background-color: #D6EEEE;
+  border-radius: 15px;
+}
+
+.tables1 {
+ border-collapse: collapse;		
+ width:15%;
+ height:36%;		
+ border-radius: 15px;
+ border-style: hidden; 
+ box-shadow: 0 0 0 1px #666;
+ flex-wrap: wrap;	
+}
+
+ .tables1 th {
+  font-size: 1.05vh;
+  font-size: 1.05vw;
+  text-align: left;
+  border-bottom: 1px solid #DDD;
+  border-top: 1px solid #DDD;
+  border-right: 1px solid #DDD;
+  border-left: 1px solid #DDD;
+  border-radius: 15px;
+}
+.tables1 td {
+  font-size: 1.05vh;
+  font-size: 1.05vw;
+  text-align: left;
+  border-bottom: 1px solid #DDD;
+  border-top: 1px solid #DDD;
+  border-right: 1px solid #DDD;
+  border-left: 1px solid #DDD;
+  border-radius: 15px 0 0 0;
+  white-space: nowrap;
+  
+}
+ .tables1 tr:hover {
+  background-color: #D6EEEE;
+  border-radius: 15px;
+}
+
+:root {
+  /* --gray: rgb(253, 251, 252);; */ 
+  --gray: rgb(34, 48, 64);
+  --blue: rgb(0, 122, 253);
+  --green: rgb(6, 215, 108);
+  --white: rgb(253, 251, 252);
+  --black: rgb(0, 0, 0);
+  --red: rgb(255, 10, 10);
+  /* --white: rgb(34, 48, 64); */
+}
+.gauge {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    font-size: 1.05vh;
+}
+
+.progress {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    border: .1rem solid var(--black);
+    border-bottom: .1rem solid var(--gray);
+    border-radius: 50%;
+    outline: .2rem solid var(--black);
+    outline-offset: .4rem;
+    overflow: hidden;
+}
+
+.progress::before{
+    position: absolute;
+    content: '';
+    top:50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    background-color: #f2f2f2;
+    border-radius: 50%;
+    z-index: 200;
+}
+.progress::after{
+    position: absolute;
+    content: '';
+    top:50%;
+    width: 100%;
+    height: 50%;
+    background-color:#f2f2f2;
+}
+
+.bar {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    background-color: var(--red);
+    transform: rotate(220deg);
+    transform-origin: center right;
+    animation: rotate 4s ease-in-out;
+}
+.bar2 {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    background-color: var(--green);
+    transform: rotate(-40deg);
+    transform-origin: center right;
+    /* animation: rotate 4s ease-in-out; */
+}
+
+.needle {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    background-color: var(--black)!important;
+    clip-path: polygon(50% 0, 50% 0, 52% 100%, 48% 100%);
+    /* transform: rotate(90deg); */
+    transform: rotate(0deg);
+    transform-origin: bottom center;
+    /* animation: rotate 4s ease-in-out; */
+    z-index: 300;
+
+}

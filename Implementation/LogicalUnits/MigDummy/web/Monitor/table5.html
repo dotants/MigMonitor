@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynamic Status Table with Steps</title>
+  <style>
+    /* General styling */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f4f4f9;
+    }
+
+    table {
+        width: 50%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 0.3vh;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    th {
+        background-color: #1483F3;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #ddd;
+    }
+
+    /* Styling for additional tables if needed */
+    .details-table {
+        width: 100%;
+        margin-top: 10px;
+        border-collapse: collapse;
+    }
+
+    .details-table th, .details-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    .details-table th {
+        background-color: #6bbfe6;
+    }
+
+    .details-row td {
+        background-color: #f9f9f9;
+        padding: 0;
+    }
+    
+    /* Example element styling */
+    #my-element {
+        padding: 10px;
+        background-color: lightblue;
+        border: 1px solid blue;
+    }
+    
+    /* Additional classes for the dynamic table */
+    .main-row {
+        /* Pointer will be used only when there are SUB steps */
+    }
+    
+    .sub-header {
+        background-color: #3382d1;
+        color: #fff;
+        font-weight: bold;
+    }
+    
+    .separator-row {
+        background-color: #ccc;
+    }
+    
+    .spacer-row td {
+        border: none;
+        height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Table structure -->
+  <table id="sfTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Completed</th>
+        <th>Rejected</th>
+        <th>In Process</th>
+        <th>Pending</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be injected dynamically -->
+    </tbody>
+  </table>
+
+  <script>
+    /**
+     * Parses a status string to extract process details and sub-processes.
+     *
+     * Example format:
+     * "name=SF Load, status=running, completed=25, rejected=0, in process=8, pending=164, subProcesses=[{name=SF Customer, ...}]"
+     */
+    function parseStatus(statusString) {
+      const mainRegex = /name=(.*?), status=.*?, completed=(\d+|N\/A), rejected=(\d+|N\/A), in process=(\d+|N\/A), pending=(\d+|N\/A)/;
+      const subRegex = /\{name=(.*?), status=.*?, completed=(\d+|N\/A), rejected=(\d+|N\/A), in process=(\d+|N\/A), pending=(\d+|N\/A)\}/g;
+      
+      const mainMatch = mainRegex.exec(statusString);
+      if (!mainMatch) return null;
+      
+      const result = {
+        name: mainMatch[1],
+        completed: mainMatch[2],
+        rejected: mainMatch[3],
+        inProcess: mainMatch[4],
+        pending: mainMatch[5],
+        subProcesses: []
+      };
+      
+      let subMatch;
+      while ((subMatch = subRegex.exec(statusString)) !== null) {
+        result.subProcesses.push({
+          name: subMatch[1],
+          completed: subMatch[2],
+          rejected: subMatch[3],
+          inProcess: subMatch[4],
+          pending: subMatch[5]
+        });
+      }
+      
+      return result;
+    }
+
+    /**
+     * Groups the steps so that each MAIN step includes its relevant SUB steps.
+     */
+    function groupSteps(steps) {
+      const mainSteps = steps.filter(step => step.Type === "MAIN");
+      const subSteps = steps.filter(step => step.Type === "SUB");
+      mainSteps.forEach(main => {
+        const mainNum = main["Setp Number"];
+        main.subSteps = subSteps.filter(sub => {
+          if (!sub["Parent Steps"]) return false;
+          const parents = sub["Parent Steps"].split(",").map(s => s.trim());
+          return parents.includes(mainNum);
+        });
+      });
+      return mainSteps;
+    }
+
+    /**
+     * Fetches API response for a given API name.
+     */
+    async function fetchApiResponse(apiName) {
+      return await k2api.invokeFabricWebService(apiName, { token: "", execId: 1 }, "GET");
+    }
+
+    /**
+     * Fetches API responses for all steps that have an API Name defined.
+     */
+    async function fetchAllApiResponses(steps) {
+      const responses = {};
+      const tasks = [];
+      steps.forEach(step => {
+        if (step["API Name"]) {
+          tasks.push(
+            fetchApiResponse(step["API Name"]).then(response => {
+              responses[step["API Name"]] = response;
+            })
+          );
+        }
+      });
+      await Promise.all(tasks);
+      return responses;
+    }
+
+    /**
+     * Builds the table based on the grouped steps and API responses.
+     * For each MAIN step with SUB steps, it adds a sub-header row, multiple SUB rows,
+     * a separator row, and a spacer row for visual separation.
+     * If a MAIN step has no SUB, no click event is attached.
+     */
+    function buildTable(groupedSteps, responses) {
+      const tableBody = document.querySelector("#sfTable tbody");
+      tableBody.innerHTML = "";
+      let mainRowCounter = 0;
+      
+      groupedSteps.forEach(main => {
+        let mainStatusString = "";
+        if (main["API Name"] && responses[main["API Name"]]) {
+          let resp = responses[main["API Name"]];
+          if (Array.isArray(resp)) { resp = resp.flat()[0]; }
+          mainStatusString = resp[main["API Name"]];
+        }
+        let parsedMain = mainStatusString ? parseStatus(mainStatusString) : null;
+        if (!parsedMain) {
+          parsedMain = {
+            name: main["Step Name"],
+            completed: "-",
+            rejected: "-",
+            inProcess: "-",
+            pending: "-",
+            subProcesses: []
+          };
+        }
+        
+        // Create the MAIN row
+        const mainRow = document.createElement("tr");
+        mainRow.classList.add("main-row");
+        mainRow.setAttribute("data-main-row-id", mainRowCounter);
+        if (main["API Name"]) {
+          mainRow.setAttribute("data-api-name", main["API Name"]);
+        }
+        mainRow.innerHTML = `
+          <td><strong>${parsedMain.name}</strong></td>
+          <td>${parsedMain.completed}</td>
+          <td>${parsedMain.rejected}</td>
+          <td>${parsedMain.inProcess}</td>
+          <td>${parsedMain.pending}</td>
+        `;
+        
+        // If there are SUB steps, add a click event to toggle their visibility
+        if (main.subSteps && main.subSteps.length > 0) {
+          mainRow.style.cursor = "pointer";
+          mainRow.addEventListener("click", function() {
+            const id = mainRow.getAttribute("data-main-row-id");
+            const subRows = tableBody.querySelectorAll("[data-parent-id='" + id + "']");
+            subRows.forEach(row => {
+              row.style.display = (row.style.display === "none" || row.style.display === "") 
+                                    ? "table-row" 
+                                    : "none";
+            });
+          });
+        } else {
+          mainRow.style.cursor = "default";
+        }
+        
+        tableBody.appendChild(mainRow);
+        
+        // If MAIN has SUB steps, add sub-header and sub-process rows
+        if (main.subSteps && main.subSteps.length > 0) {
+          // Sub-header row for the sub-processes
+          const subHeaderRow = document.createElement("tr");
+          subHeaderRow.classList.add("sub-header");
+          subHeaderRow.setAttribute("data-parent-id", mainRowCounter);
+          subHeaderRow.style.display = "none";
+          subHeaderRow.innerHTML = `
+            <th>Name</th>
+            <th>Completed</th>
+            <th>Rejected</th>
+            <th>In Process</th>
+            <th>Pending</th>
+          `;
+          tableBody.appendChild(subHeaderRow);
+          
+          // Create rows for each SUB step
+          main.subSteps.forEach((sub, index) => {
+            let subStatusString = "";
+            if (sub["API Name"] && responses[sub["API Name"]]) {
+              let resp = responses[sub["API Name"]];
+              if (Array.isArray(resp)) { resp = resp.flat()[0]; }
+              subStatusString = resp[sub["API Name"]];
+            }
+            let parsedSub = subStatusString ? parseStatus(subStatusString) : null;
+            if (!parsedSub) {
+              parsedSub = {
+                name: sub["Step Name"],
+                completed: "-",
+                rejected: "-",
+                inProcess: "-",
+                pending: "-"
+              };
+            }
+            const subRow = document.createElement("tr");
+            subRow.classList.add("sub-process");
+            subRow.setAttribute("data-parent-id", mainRowCounter);
+            if (sub["API Name"]) {
+              subRow.setAttribute("data-api-name", sub["API Name"]);
+            }
+            subRow.style.display = "none";
+            subRow.innerHTML = `
+              <td>↳ ${parsedSub.name}</td>
+              <td>${parsedSub.completed}</td>
+              <td>${parsedSub.rejected}</td>
+              <td>${parsedSub.inProcess}</td>
+              <td>${parsedSub.pending}</td>
+            `;
+            tableBody.appendChild(subRow);
+          });
+          
+          // Add a separator row
+          const separatorRow = document.createElement("tr");
+          separatorRow.classList.add("separator-row");
+          separatorRow.setAttribute("data-parent-id", mainRowCounter);
+          separatorRow.style.display = "none";
+          separatorRow.innerHTML = `<td colspan="5"></td>`;
+          tableBody.appendChild(separatorRow);
+
+          // Add a spacer row for extra spacing (20px height)
+          const spacerRow = document.createElement("tr");
+          spacerRow.classList.add("spacer-row");
+          spacerRow.setAttribute("data-parent-id", mainRowCounter);
+          spacerRow.style.display = "none";
+          spacerRow.innerHTML = `<td colspan="5"></td>`;
+          tableBody.appendChild(spacerRow);
+        }
+        
+        mainRowCounter++;
+      });
+    }
+
+    /**
+     * Updates the table row for a given step using the updated API response.
+     */
+    function updateTableRowForStep(step, updatedResponse) {
+      console.log("Updating step:", step["Step Name"], "with response:", updatedResponse);
+      let resp = updatedResponse;
+      if (Array.isArray(resp)) { resp = resp.flat()[0]; }
+      const expectedKey = step["API Name"];
+      let statusString = resp[expectedKey];
+      if (!statusString) {
+        const keys = Object.keys(resp);
+        if (keys.length > 0) {
+          console.warn(`Expected key ${expectedKey} not found. Using ${keys[0]} instead.`);
+          statusString = resp[keys[0]];
+        } else {
+          console.error("No keys in response");
+          return;
+        }
+      }
+      console.log("Status string for", expectedKey, ":", statusString);
+      const parsedData = parseStatus(statusString);
+      if (!parsedData) {
+        console.warn("parseStatus returned null for step", step["Step Name"]);
+        return;
+      }
+      
+      if (step.Type === "MAIN") {
+        let mainRow = document.querySelector("tr[data-api-name='" + expectedKey + "']");
+        if (!mainRow) {
+          console.warn("Main row not found for API:", expectedKey);
+          return;
+        }
+        mainRow.innerHTML = `
+          <td><strong>${parsedData.name}</strong></td>
+          <td>${parsedData.completed}</td>
+          <td>${parsedData.rejected}</td>
+          <td>${parsedData.inProcess}</td>
+          <td>${parsedData.pending}</td>
+        `;
+        let mainRowId = mainRow.getAttribute("data-main-row-id");
+        if (!mainRowId) {
+          console.warn("Main row id not found for API:", expectedKey);
+          return;
+        }
+        const tableBody = document.querySelector("#sfTable tbody");
+        // Check if sub-rows are currently expanded
+        const existingRows = tableBody.querySelectorAll("[data-parent-id='" + mainRowId + "']");
+        let isExpanded = false;
+        existingRows.forEach(row => {
+          if (row.style.display !== "none" && row.style.display !== "") {
+            isExpanded = true;
+          }
+        });
+        // Remove all related sub-rows
+        existingRows.forEach(row => row.remove());
+        // Rebuild sub-rows if there are sub-processes in the new data
+        if (parsedData.subProcesses && parsedData.subProcesses.length > 0) {
+          const subHeaderRow = document.createElement("tr");
+          subHeaderRow.classList.add("sub-header");
+          subHeaderRow.setAttribute("data-parent-id", mainRowId);
+          subHeaderRow.style.display = isExpanded ? "table-row" : "none";
+          subHeaderRow.innerHTML = `
+            <th>Name</th>
+            <th>Completed</th>
+            <th>Rejected</th>
+            <th>In Process</th>
+            <th>Pending</th>
+          `;
+          tableBody.insertBefore(subHeaderRow, mainRow.nextSibling);
+          
+          parsedData.subProcesses.forEach((sub, index) => {
+            const subRow = document.createElement("tr");
+            subRow.classList.add("sub-process");
+            subRow.setAttribute("data-parent-id", mainRowId);
+            subRow.style.display = isExpanded ? "table-row" : "none";
+            subRow.innerHTML = `
+              <td>↳ ${sub.name}</td>
+              <td>${sub.completed}</td>
+              <td>${sub.rejected}</td>
+              <td>${sub.inProcess}</td>
+              <td>${sub.pending}</td>
+            `;
+            tableBody.insertBefore(subRow, subHeaderRow.nextSibling);
+          });
+          
+          const separatorRow = document.createElement("tr");
+          separatorRow.classList.add("separator-row");
+          separatorRow.setAttribute("data-parent-id", mainRowId);
+          separatorRow.style.display = isExpanded ? "table-row" : "none";
+          separatorRow.innerHTML = `<td colspan="5"></td>`;
+          tableBody.appendChild(separatorRow);
+
+          // Add spacer row for extra spacing
+          const spacerRow = document.createElement("tr");
+          spacerRow.classList.add("spacer-row");
+          spacerRow.setAttribute("data-parent-id", mainRowId);
+          spacerRow.style.display = isExpanded ? "table-row" : "none";
+          spacerRow.innerHTML = `<td colspan="5"></td>`;
+          tableBody.appendChild(spacerRow);
+        }
+      } else {
+        let subRow = document.querySelector("tr.sub-process[data-api-name='" + expectedKey + "']");
+        if (!subRow) {
+          console.warn("Sub row not found for API:", expectedKey);
+          return;
+        }
+        subRow.innerHTML = `
+          <td>↳ <strong>${parsedData.name}</strong></td>
+          <td>${parsedData.completed}</td>
+          <td>${parsedData.rejected}</td>
+          <td>${parsedData.inProcess}</td>
+          <td>${parsedData.pending}</td>
+        `;
+      }
+    }
+    
+    (async function() {
+      try {
+        const steps = await k2api.invokeFabricWebService("wsMonitorConfig", { token: "", format: "json" }, "GET");
+        console.log("Steps:", JSON.stringify(steps));
+        
+        const groupedSteps = groupSteps(steps);
+        const responses = await fetchAllApiResponses(steps);
+        buildTable(groupedSteps, responses);
+        
+        // Set up automatic refresh for each step based on its refresh interval
+        steps.forEach(step => {
+          if (step["API Name"] && step["Refresh interval"]) {
+            const interval = parseInt(step["Refresh interval"], 10) * 1000;
+            setInterval(async () => {
+              console.log("Refreshing step:", step["Step Name"]);
+              const updatedResponse = await fetchApiResponse(step["API Name"]);
+              updateTableRowForStep(step, updatedResponse);
+            }, interval);
+          }
+        });
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    })();
+  </script>
+  <script src ="test3.js"></script>
+ 
+  <script>
+    window.onload = function () {
+      window.k2api = window.k2api || window.parent.k2api;
+      window.k2api.setNavigationMenu([{ name: 'Table', path: '/table5.html' },/* { name: 'Run2', path: '/index2.html' },{ name: 'Run3', path: '/index3.html' },*/{ name: 'Diagram', path: '/table6.html' }]);
+      
+  };
+  </script>
+</body>
+</html>
