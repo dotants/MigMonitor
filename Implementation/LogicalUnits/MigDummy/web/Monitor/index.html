@@ -145,7 +145,7 @@
         const subSteps = steps.filter((step) => step.Type === "SUB");
 
         mainSteps.forEach((main) => {
-          const mainNum = main["Setp Number"];
+          const mainNum = main["Step Number"];
           main.subSteps = subSteps.filter((sub) => {
             if (!sub["Parent Steps"]) return false;
             const parents = sub["Parent Steps"].split(",").map((s) => s.trim());
@@ -293,6 +293,7 @@
 
           // Create a row for the MAIN step
           const mainRow = document.createElement("tr");
+          mainRow.setAttribute("data-step-number", main["Step Number"]);
           mainRow.classList.add("main-row");
           mainRow.setAttribute("data-main-row-id", mainRowCounter);
 
@@ -483,8 +484,9 @@
 
         // Find the corresponding MAIN row in the table
         let mainRow = document.querySelector(
-          "tr[data-api-name='" + expectedKey + "']"
+          "tr[data-step-number='" + step["Step Number"] + "']"
         );
+
         if (!mainRow) {
           console.warn("Main row not found for API:", expectedKey);
           return;
@@ -554,8 +556,9 @@
           // Rebuild each sub-row
           groupedSubSteps.forEach((sub) => {
             let subData = mergedSubProcesses.find(
-              (m) => m.name === sub["Step Name"]
+              (m) => m.name.toLowerCase() === sub["Step Name"].toLowerCase()
             );
+
             if (!subData) {
               subData = {
                 name: sub["Step Name"],
@@ -665,7 +668,7 @@
           console.error("Error:", error);
         }
       })();
-      localStorage.clear();
+      // localStorage.clear();
     </script>
 
     <script>

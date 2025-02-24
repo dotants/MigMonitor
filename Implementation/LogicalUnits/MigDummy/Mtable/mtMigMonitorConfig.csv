@@ -1,4 +1,4 @@
-﻿Setp Number,Step Name,Type,Parent Steps,API Name,Refresh interval,Active Ind
+﻿Step Number,Step Name,Type,Parent Steps,API Name,Refresh interval,Active Ind
 1,Extract,MAIN,0,wsExtractStatus,5,1
 2,SF Load,MAIN,1,wsSfLoadStatus,5,1
 3,SF Customer,SUB,2,,,1
