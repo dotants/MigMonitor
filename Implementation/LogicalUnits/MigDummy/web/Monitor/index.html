@@ -47,11 +47,10 @@
         font-weight: bold;
       }
       .separator-row {
-        background-color: #ccc;
+        background-color: #f2f2f2;
       }
       .spacer-row td {
         border: none;
-        height: 20px;
       }
       .main-row {
         /* We only apply a pointer cursor when there are SUB steps */
@@ -96,7 +95,9 @@
         // Regex to capture the main data
         const mainRegex =
           /name=(.*?), status=.*?, completed=(\d+|N\/A), rejected=(\d+|N\/A), in process=(\d+|N\/A), pending=(\d+|N\/A)/;
+        console.log("mainRegex", JSON.stringify(mainRegex));
         const mainMatch = mainRegex.exec(statusString);
+        console.log("mainMatch", JSON.stringify(mainMatch));
         if (!mainMatch) return null;
 
         const result = {
@@ -107,6 +108,7 @@
           pending: mainMatch[5],
           subProcesses: [],
         };
+        console.log("result", JSON.stringify(result));
 
         // Check if subProcesses block exists
         const subBlockMatch = /subProcesses=\[(.*)\]/.exec(statusString);
@@ -117,6 +119,7 @@
             /\{name=(.*?), status=.*?, completed=(\d+|N\/A), rejected=(\d+|N\/A), in process=(\d+|N\/A), pending=(\d+|N\/A)\}/g;
           let subMatch;
           while ((subMatch = subRegex.exec(subProcessesStr)) !== null) {
+            console.log("subMatch", JSON.stringify(subMatch));
             result.subProcesses.push({
               name: subMatch[1],
               completed: subMatch[2],
@@ -124,8 +127,10 @@
               inProcess: subMatch[4],
               pending: subMatch[5],
             });
+            console.log("subMatch", JSON.stringify(subMatch));
           }
         }
+        console.log("result", JSON.stringify(result));
         return result;
       }
 
@@ -373,7 +378,8 @@
                 parsedMain.subProcesses.length > 0
               ) {
                 parsedSub = parsedMain.subProcesses.find(
-                  (item) => item.name === sub["Step Name"]
+                  (item) =>
+                    item.name.toLowerCase() === sub["Step Name"].toLowerCase()
                 );
               }
               // If still not found, use default
@@ -439,6 +445,7 @@
           "with response:",
           updatedResponse
         );
+        console.log("updatedResponse", JSON.stringify(updatedResponse));
 
         let resp = updatedResponse;
         if (Array.isArray(resp)) {
@@ -446,7 +453,9 @@
         }
 
         const expectedKey = step["API Name"];
+        console.log("expectedKey", JSON.stringify(expectedKey));
         let statusString = resp[expectedKey];
+        console.log("statusString", JSON.stringify(statusString));
         if (!statusString) {
           // If the exact key doesn't exist, pick the first available key
           const keys = Object.keys(resp);
@@ -455,6 +464,7 @@
               `Expected key ${expectedKey} not found. Using ${keys[0]} instead.`
             );
             statusString = resp[keys[0]];
+            console.log("statusString", JSON.stringify(statusString));
           } else {
             console.error("No keys in response");
             return;
@@ -464,6 +474,8 @@
 
         // Parse the status string
         const parsedData = parseStatus(statusString);
+        console.log("Status string for", expectedKey, ":", statusString);
+        console.log("parsedData", JSON.stringify(parsedData));
         if (!parsedData) {
           console.warn("parseStatus returned null for step", step["Step Name"]);
           return;
@@ -653,6 +665,7 @@
           console.error("Error:", error);
         }
       })();
+      localStorage.clear();
     </script>
 
     <script>
