@@ -606,6 +606,44 @@
          * Setup refresh intervals for APIs
          */
         setupRefreshIntervals: function () {
+          // Add execution ID refresh interval (every 15 seconds)
+          const EXEC_ID_REFRESH_INTERVAL = 15000; // 15 seconds
+          setInterval(async () => {
+            try {
+              console.log("Refreshing execution ID...");
+              // Execution ID refresh logic
+              let execId;
+              try {
+                const wsExecIdResponse = await k2api.invokeFabricWebService(
+                  "wsExecId",
+                  { token: "", format: "json" },
+                  "GET"
+                );
+
+                // More flexible execId extraction
+                execId =
+                  wsExecIdResponse?.execId ||
+                  (typeof wsExecIdResponse === "object"
+                    ? Object.values(wsExecIdResponse)[0]
+                    : wsExecIdResponse);
+
+                if (!execId) {
+                  throw new Error("Could not extract execution ID");
+                }
+              } catch (execError) {
+                console.error("Execution ID fetch failed:", execError);
+                execId = Date.now(); // Fallback solution
+              }
+
+              this.execId = execId;
+              document.getElementById("Exec_ID").innerHTML =
+                "Run Number: " + this.execId;
+              console.log("Execution ID refresh complete: " + this.execId);
+            } catch (error) {
+              console.error("Error during execution ID refresh:", error);
+            }
+          }, EXEC_ID_REFRESH_INTERVAL);
+
           // Add a master refresh interval (every 30 seconds)
           const MASTER_REFRESH_INTERVAL = 30000; // 30 seconds
           setInterval(() => {
