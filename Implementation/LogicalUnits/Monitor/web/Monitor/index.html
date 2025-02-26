@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Table + Diagram - Side by Side (Responsive)</title>
+    <title>Table + Diagram with Minimap</title>
     <style>
-      /* Global styling */
+      /* Global styles */
       body {
         margin: 0;
         padding: 0;
@@ -16,6 +16,7 @@
         display: flex;
         flex-direction: row;
         height: 100vh;
+        min-height: 100vh;
       }
       .table-container,
       .diagram-container {
@@ -27,8 +28,47 @@
       .table-container {
         overflow-y: auto;
       }
+      /* Diagram container with fixed size and no scrollbars – panning is via mouse drag */
       .diagram-container {
-        overflow: hidden; /* No scrolling in the diagram container */
+        overflow: hidden;
+        min-height: 600px;
+      }
+      /* Center Diagram Button */
+      .center-btn {
+        position: absolute;
+        top: 12px;
+        right: 58px;
+        z-index: 1100;
+        padding: 5px 10px;
+        background-color: #1483f3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      /* Drag hint overlay to inform the user they can drag the diagram */
+      .drag-hint {
+        position: absolute;
+        top: 210px;
+        right: -17px;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        z-index: 1100;
+        font-size: 12px;
+      }
+      /* Minimap container in the bottom-right corner */
+      .minimap-container {
+        position: absolute;
+        top: 50px;
+        right: 10px;
+        z-index: 1200;
+        width: 200px;
+        height: 150px;
+        border: 1px solid #ccc;
+        background-color: #fff;
       }
       /* Table styling */
       #loading,
@@ -66,17 +106,16 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      /* Column widths */
       th:first-child,
       td:first-child {
         width: 35%;
-        position: relative; /* Added for absolute positioning of expand icon */
+        position: relative;
       }
       th:not(:first-child),
       td:not(:first-child) {
         width: 16.25%;
-        text-align: right; /* Right-align numeric data */
-        padding-right: 20px; /* Add consistent padding */
+        text-align: right;
+        padding-right: 20px;
       }
       th {
         background-color: #1483f3;
@@ -123,7 +162,6 @@
       .sub-process td:first-child {
         padding-left: 25px;
       }
-      /* Improved hierarchy indicators */
       .hierarchy-indicator {
         display: inline-block;
         width: 16px;
@@ -132,7 +170,6 @@
         line-height: 16px;
         margin-right: 8px;
       }
-      /* Indent levels */
       .indent-level-1 {
         padding-left: 25px !important;
       }
@@ -170,24 +207,24 @@
       }
       .status-completed {
         background-color: #2ecc71;
-      } /* Green */
+      }
       .status-in-progress {
         background-color: #2ecc71;
         border: 1px dashed #27ae60;
-      } /* Green with dash */
+      }
       .status-pending {
         background-color: #ffffff;
         border: 1px solid #cccccc;
-      } /* White */
+      }
       .status-rejected {
         background-color: #e74c3c;
-      } /* Red */
+      }
       .status-na {
         background-color: #000000;
-      } /* Black */
+      }
       .status-default {
         background-color: #808080;
-      } /* Gray */
+      }
       /* Tooltip styling */
       .tooltip {
         position: absolute;
@@ -201,18 +238,16 @@
         transition: opacity 0.3s;
         z-index: 1000;
       }
-      /* Responsive adjustments */
       @media (max-width: 768px) {
         .container {
           flex-direction: column;
         }
         .table-container,
         .diagram-container {
-          height: 50vh;
+          height: auto;
           width: 100%;
         }
       }
-      /* Loading spinner */
       .spinner {
         border: 4px solid rgba(0, 0, 0, 0.1);
         width: 24px;
@@ -261,17 +296,45 @@
       </div>
       <!-- Diagram Section -->
       <div class="diagram-container">
-        <svg id="diagram"></svg>
+        <!-- Center Diagram Button -->
+        <button class="center-btn" id="centerBtn">Center Diagram</button>
+        <!-- Drag Hint Overlay -->
+        <div class="drag-hint">Drag to pan diagram</div>
+        <!-- Main SVG Diagram -->
+        <svg
+          id="diagram"
+          viewBox="30 30 800 600"
+          preserveAspectRatio="xMidYMid meet"
+          style="width: 100%; height: 100%"
+        ></svg>
         <div class="tooltip" id="diagram-tooltip"></div>
+        <!-- Minimap Container -->
+        <div class="minimap-container">
+          <svg
+            id="minimap"
+            viewBox="0 0 400 300"
+            style="width: 100%; height: 100%"
+          ></svg>
+          <!-- The viewport rectangle on the minimap -->
+          <rect
+            id="minimap-viewport"
+            x="0"
+            y="0"
+            width="200"
+            height="150"
+            fill="none"
+            stroke="red"
+            stroke-width="2"
+          ></rect>
+        </div>
       </div>
     </div>
 
-    <!-- Shared k2api configuration and navigation menu setup -->
+    <!-- k2api configuration and navigation setup -->
     <script>
       window.onload = function () {
         window.k2api = window.k2api || window.parent.k2api;
         if (!window.k2api) {
-          // Mock k2api for demonstration if no external environment exists
           window.k2api = {
             setNavigationMenu: function () {},
             invokeFabricWebService: async function (apiName, params, method) {
@@ -285,22 +348,14 @@
           { name: "Table", path: "/table5.html" },
           { name: "Diagram", path: "/table6.html" },
         ]);
-
-        // Initialize application
         DataManager.init();
       };
     </script>
 
     <!-- Utility Functions -->
     <script>
-      // Utility functions
+      // Utility functions with comments in English
       const Utils = {
-        /**
-         * Safe JSON parse with fallback
-         * @param {string} str - JSON string to parse
-         * @param {*} fallback - Fallback value if parsing fails
-         * @returns {*} Parsed object or fallback
-         */
         safeJsonParse: function (str, fallback) {
           try {
             return JSON.parse(str);
@@ -309,12 +364,6 @@
             return fallback;
           }
         },
-
-        /**
-         * Show error message to user
-         * @param {string} message - Error message
-         * @param {Error} [error] - Error object (optional)
-         */
         showError: function (message, error) {
           const errorElement = document.getElementById("error-message");
           if (errorElement) {
@@ -324,26 +373,15 @@
           }
           console.error(message, error);
         },
-
-        /**
-         * Hide error message
-         */
         hideError: function () {
           const errorElement = document.getElementById("error-message");
           if (errorElement) {
             errorElement.style.display = "none";
           }
         },
-
-        /**
-         * Debounce function to limit execution frequency
-         * @param {Function} func - Function to debounce
-         * @param {number} wait - Wait time in milliseconds
-         * @returns {Function} Debounced function
-         */
         debounce: function (func, wait) {
           let timeout;
-          return function executedFunction(...args) {
+          return function (...args) {
             const later = () => {
               clearTimeout(timeout);
               func(...args);
@@ -357,15 +395,11 @@
 
     <!-- Data Manager Module -->
     <script>
-      // Data Manager Module
       const DataManager = {
         steps: [],
         responses: {},
         execId: 0,
-
-        /**
-         * Initialize data loading
-         */
+        // Initialize data, table, diagram and refresh intervals
         init: async function () {
           try {
             Utils.hideError();
@@ -377,15 +411,9 @@
             Utils.showError("Failed to initialize the application", error);
           }
         },
-
-        /**
-         * Load steps configuration and API responses
-         */
         loadData: async function () {
           try {
             Utils.hideError();
-
-            // Getting execution ID with flexible extraction
             let execId;
             try {
               const wsExecIdResponse = await k2api.invokeFabricWebService(
@@ -393,27 +421,19 @@
                 { token: "", format: "json" },
                 "GET"
               );
-
-              // More flexible execId extraction
               execId =
                 wsExecIdResponse?.execId ||
                 (typeof wsExecIdResponse === "object"
                   ? Object.values(wsExecIdResponse)[0]
                   : wsExecIdResponse);
-
-              if (!execId) {
-                throw new Error("Could not extract execution ID");
-              }
+              if (!execId) throw new Error("Could not extract execution ID");
             } catch (execError) {
               console.error("Execution ID fetch failed:", execError);
-              execId = Date.now(); // Fallback solution
+              execId = Date.now();
             }
-
             this.execId = execId;
             document.getElementById("Exec_ID").innerHTML =
               "Run Number: " + this.execId;
-
-            // More flexible step configuration extraction
             let steps;
             try {
               steps = await k2api.invokeFabricWebService(
@@ -421,8 +441,6 @@
                 { token: "", format: "json" },
                 "GET"
               );
-
-              // Convert to steps array if needed
               steps = Array.isArray(steps)
                 ? steps
                 : typeof steps === "object"
@@ -430,38 +448,22 @@
                 : [];
             } catch (configError) {
               console.error("Steps configuration fetch failed:", configError);
-              steps = []; // Fallback solution
+              steps = [];
             }
-
-            if (steps.length === 0) {
+            if (steps.length === 0)
               throw new Error("No steps found in configuration");
-            }
-
             this.steps = steps;
-
-            // Load API responses with error handling
             this.responses = await this.fetchAllApiResponses(this.steps);
             console.log("Loaded API responses:", this.responses);
-
             document.getElementById("loading").style.display = "none";
             document.getElementById("sfTable").style.display = "table";
-
-            // Immediate call to build table
             TableView.init();
           } catch (error) {
             Utils.showError("Failed to load initial data", error);
-
-            // Show table even with error
             document.getElementById("loading").style.display = "none";
             document.getElementById("sfTable").style.display = "table";
           }
         },
-
-        /**
-         * Fetch responses for all APIs
-         * @param {Array} steps - Step configuration array
-         * @returns {Object} Map of API responses
-         */
         fetchAllApiResponses: async function (steps) {
           const responses = {};
           const tasks = [];
@@ -484,12 +486,6 @@
           await Promise.allSettled(tasks);
           return responses;
         },
-
-        /**
-         * Fetch single API response
-         * @param {string} apiName - API name to fetch
-         * @returns {Promise<Object>} API response
-         */
         fetchApiResponse: async function (apiName) {
           try {
             const response = await k2api.invokeFabricWebService(
@@ -497,35 +493,22 @@
               { token: "", execId: this.execId },
               "GET"
             );
-
-            // Log response for debugging
             console.log(`Response from ${apiName}:`, response);
-
-            // If response is an object or array, check its structure recursively
             if (typeof response === "object" && response !== null) {
               console.log(`Response structure for ${apiName}:`);
               this.logObjectStructure(response);
             }
-
             return response;
           } catch (error) {
             console.error(`Error fetching API ${apiName}:`, error);
             throw error;
           }
         },
-
-        /**
-         * Function to check object structure recursively to a limited depth
-         * @param {Object} obj - Object to log structure of
-         * @param {number} depth - Current depth level
-         * @param {number} maxDepth - Maximum depth to log
-         */
         logObjectStructure: function (obj, depth = 0, maxDepth = 2) {
           if (depth > maxDepth) {
             console.log("  ".repeat(depth) + "[Max depth reached]");
             return;
           }
-
           if (Array.isArray(obj)) {
             console.log(
               "  ".repeat(depth) + "Array with " + obj.length + " items"
@@ -573,45 +556,25 @@
             console.log("  ".repeat(depth) + "Value: " + String(obj));
           }
         },
-
-        /**
-         * Full data refresh mechanism
-         * Refreshes all API responses and updates both table and diagram views
-         */
         refreshAllData: async function () {
           console.log("Performing full data refresh...");
-
           try {
-            // Fetch all API responses again
             const updatedResponses = await this.fetchAllApiResponses(
               this.steps
             );
-
-            // Update the responses object
             this.responses = updatedResponses;
-
-            // Update table view
             TableView.init();
-
-            // Update diagram view
             DiagramView.update();
-
             console.log("Full data refresh complete");
           } catch (error) {
             console.error("Error during full data refresh:", error);
           }
         },
-
-        /**
-         * Setup refresh intervals for APIs
-         */
         setupRefreshIntervals: function () {
-          // Add execution ID refresh interval (every 15 seconds)
-          const EXEC_ID_REFRESH_INTERVAL = 15000; // 15 seconds
+          const EXEC_ID_REFRESH_INTERVAL = 15000;
           setInterval(async () => {
             try {
               console.log("Refreshing execution ID...");
-              // Execution ID refresh logic
               let execId;
               try {
                 const wsExecIdResponse = await k2api.invokeFabricWebService(
@@ -619,22 +582,16 @@
                   { token: "", format: "json" },
                   "GET"
                 );
-
-                // More flexible execId extraction
                 execId =
                   wsExecIdResponse?.execId ||
                   (typeof wsExecIdResponse === "object"
                     ? Object.values(wsExecIdResponse)[0]
                     : wsExecIdResponse);
-
-                if (!execId) {
-                  throw new Error("Could not extract execution ID");
-                }
+                if (!execId) throw new Error("Could not extract execution ID");
               } catch (execError) {
                 console.error("Execution ID fetch failed:", execError);
-                execId = Date.now(); // Fallback solution
+                execId = Date.now();
               }
-
               this.execId = execId;
               document.getElementById("Exec_ID").innerHTML =
                 "Run Number: " + this.execId;
@@ -643,35 +600,23 @@
               console.error("Error during execution ID refresh:", error);
             }
           }, EXEC_ID_REFRESH_INTERVAL);
-
-          // Add a master refresh interval (every 30 seconds)
-          const MASTER_REFRESH_INTERVAL = 30000; // 30 seconds
+          const MASTER_REFRESH_INTERVAL = 30000;
           setInterval(() => {
             this.refreshAllData();
           }, MASTER_REFRESH_INTERVAL);
-
-          // Individual API refresh intervals
           this.steps.forEach((step) => {
             if (step["API Name"] && step["Refresh interval"]) {
               const interval = parseInt(step["Refresh interval"], 10) * 1000;
               if (isNaN(interval) || interval <= 0) return;
-
               setInterval(async () => {
                 try {
                   console.log(`Refreshing API: ${step["API Name"]}`);
                   const updatedResponse = await this.fetchApiResponse(
                     step["API Name"]
                   );
-
-                  // Store the response
                   this.responses[step["API Name"]] = updatedResponse;
-
-                  // Update table immediately
                   TableView.updateTableRowForStep(step, updatedResponse);
-
-                  // Force diagram update
                   DiagramView.update();
-
                   console.log(`API refresh complete: ${step["API Name"]}`);
                 } catch (error) {
                   console.error(
@@ -683,15 +628,9 @@
             }
           });
         },
-
-        /**
-         * Group steps into main steps and substeps
-         * @returns {Array} Grouped steps
-         */
         getGroupedSteps: function () {
           const mainSteps = this.steps.filter((step) => step.Type === "MAIN");
           const subSteps = this.steps.filter((step) => step.Type === "SUB");
-
           mainSteps.forEach((main) => {
             const mainNum = main["Step Number"];
             main.subSteps = subSteps.filter((sub) => {
@@ -702,39 +641,21 @@
               return parents.includes(mainNum);
             });
           });
-
           return mainSteps;
         },
-
-        /**
-         * Parse status information from API response - IMPROVED IMPLEMENTATION
-         * This function handles both the main process and subprocesses correctly
-         *
-         * @param {string|Object} response - API response to parse
-         * @returns {Object|null} Parsed status object or null
-         */
         parseStatus: function (response) {
           try {
-            // Step 1: Handle null/undefined response
             if (!response) return null;
-
-            // Step 2: Handle array responses - extract first item
-            // The API often returns arrays like [{"sfLoadStatus": "..."}]
             let data = response;
             if (Array.isArray(data)) {
               data = data.length > 0 ? data[0] : null;
-              // Handle nested arrays if they exist
               if (Array.isArray(data)) {
                 data = data.length > 0 ? data[0] : null;
               }
             }
             if (!data) return null;
-
-            // Step 3: Get the status string - might be in any property of the object
-            // For example: {"sfLoadStatus": "name=SF Load, status=running, completed=97..."}
             let statusString = null;
             if (typeof data === "object") {
-              // Find the first property that contains status information
               for (const key in data) {
                 if (
                   data[key] &&
@@ -753,21 +674,16 @@
             } else if (typeof data === "string") {
               statusString = data;
             }
-
             if (!statusString) {
               console.warn("No status string found in response");
               return null;
             }
-
-            // Step 4: Extract status using regex
             let status = "unknown";
             const statusMatch = statusString.match(/status=([^,}]+)/);
             if (statusMatch) {
               status = statusMatch[1].trim();
               console.log("Extracted status:", status);
             }
-
-            // Step 5: Build the result object with all needed fields
             const result = {
               status: status,
               name: "",
@@ -777,36 +693,26 @@
               pending: "0",
               subProcesses: [],
             };
-
-            // Step 6: Extract name and counts
             const nameMatch = statusString.match(/name=([^,}]+)/);
             if (nameMatch) {
               result.name = nameMatch[1].trim();
             }
-
-            // Extract numerical values
             const completedMatch = statusString.match(/completed=([^,}]+)/);
             if (completedMatch) {
               result.completed = completedMatch[1].trim();
             }
-
             const rejectedMatch = statusString.match(/rejected=([^,}]+)/);
             if (rejectedMatch) {
               result.rejected = rejectedMatch[1].trim();
             }
-
             const inProcessMatch = statusString.match(/in process=([^,}]+)/);
             if (inProcessMatch) {
               result.inProcess = inProcessMatch[1].trim();
             }
-
             const pendingMatch = statusString.match(/pending=([^,}]+)/);
             if (pendingMatch) {
               result.pending = pendingMatch[1].trim();
             }
-
-            // Step 7: IMPORTANT - Extract subProcesses properly
-            // This is a critical part that was previously not working correctly
             console.log("Extracting subProcesses from status string...");
             const subProcessPart = statusString.match(/subProcesses=\[(.*)\]/s);
             if (subProcessPart && subProcessPart[1]) {
@@ -814,12 +720,8 @@
                 "Found subProcesses section:",
                 subProcessPart[1].substring(0, 50) + "..."
               );
-
-              // Method 1: Extract using precise regex pattern for each subprocess
-              // This matches the exact format seen in the API responses
               const subProcessRegex =
                 /\{name=([^,]+), status=([^,]+), completed=([^,]+), rejected=([^,]+), in process=([^,]+), pending=([^,}]+)\}/g;
-
               let match;
               while (
                 (match = subProcessRegex.exec(subProcessPart[1])) !== null
@@ -834,9 +736,6 @@
                   pending: match[6].trim(),
                 });
               }
-
-              // Method 2: Fallback - if regex fails, try manual string splitting
-              // This provides a robust backup if the format changes slightly
               if (result.subProcesses.length === 0) {
                 console.log(
                   "Primary regex failed, attempting manual parsing of subprocesses"
@@ -845,26 +744,20 @@
                 console.log(
                   `Found ${items.length} subprocesses by manual splitting`
                 );
-
                 for (let item of items) {
-                  // Ensure the item has proper enclosing braces
                   if (!item.startsWith("{")) {
                     item = "{" + item;
                   }
                   if (!item.endsWith("}")) {
                     item = item + "}";
                   }
-
                   console.log("Processing subprocess item:", item);
-
-                  // Extract each field individually
                   const nameMatch = item.match(/name=([^,]+)/);
                   const statusMatch = item.match(/status=([^,]+)/);
                   const completedMatch = item.match(/completed=([^,]+)/);
                   const rejectedMatch = item.match(/rejected=([^,]+)/);
                   const inProcessMatch = item.match(/in process=([^,]+)/);
                   const pendingMatch = item.match(/pending=([^,}]+)/);
-
                   if (nameMatch) {
                     console.log(
                       "Found subprocess via manual parsing:",
@@ -886,25 +779,16 @@
                 }
               }
             }
-
-            // Log the final result for debugging
             console.log("Final parsed result with subProcesses:", result);
             console.log(
               `Found ${result.subProcesses.length} subprocesses in total`
             );
-
             return result;
           } catch (error) {
             console.error("Error parsing status:", error);
             return null;
           }
         },
-
-        /**
-         * Get step from steps array by number
-         * @param {string} stepNumber - Step number
-         * @returns {Object|null} Step object or null
-         */
         getStepByNumber: function (stepNumber) {
           return (
             this.steps.find((step) => step["Step Number"] === stepNumber) ||
@@ -916,13 +800,8 @@
 
     <!-- Table View Module -->
     <script>
-      // Table View Module
       const TableView = {
         expandedRows: new Set(),
-
-        /**
-         * Initialize table view
-         */
         init: function () {
           this.buildTable(DataManager.getGroupedSteps(), DataManager.responses);
           window.addEventListener(
@@ -933,45 +812,26 @@
           );
           this.adjustTableWidth();
         },
-
-        /**
-         * Adjust table width based on content
-         */
         adjustTableWidth: function () {
           const table = document.getElementById("sfTable");
           if (!table) return;
-
           const containerWidth = table.parentElement.clientWidth;
-          table.style.width = Math.min(containerWidth, 1200) + "px";
         },
-
-        /**
-         * Build table with grouped steps
-         * @param {Array} groupedSteps - Grouped steps
-         * @param {Object} responses - API responses
-         */
         buildTable: function (groupedSteps, responses) {
           const tableBody = document.querySelector("#sfTable tbody");
           tableBody.innerHTML = "";
-
           for (
             let mainRowCounter = 0;
             mainRowCounter < groupedSteps.length;
             mainRowCounter++
           ) {
             const main = groupedSteps[mainRowCounter];
-
-            // Get status for main step
             let parsedMain = null;
-
             if (main["API Name"] && responses[main["API Name"]]) {
               let resp = responses[main["API Name"]];
-              // Parse the response using the enhanced parsing function
               parsedMain = DataManager.parseStatus(resp);
               console.log(`Parsed data for ${main["Step Name"]}:`, parsedMain);
             }
-
-            // Fallback to defaults if we still don't have parsed data
             if (!parsedMain) {
               parsedMain = {
                 name: main["Step Name"] || "Unknown Step",
@@ -983,66 +843,42 @@
                 subProcesses: [],
               };
             }
-
-            // Create main row
             const mainRow = document.createElement("tr");
             mainRow.setAttribute("data-step-number", main["Step Number"]);
             mainRow.classList.add("main-row");
-
-            // Add expandable class if there are substeps
             if (main.subSteps && main.subSteps.length > 0) {
               mainRow.classList.add("expandable");
               if (this.expandedRows.has(mainRowCounter.toString())) {
                 mainRow.classList.add("expanded");
               }
             }
-
             mainRow.setAttribute("data-main-row-id", mainRowCounter);
             if (main["API Name"]) {
               mainRow.setAttribute("data-api-name", main["API Name"]);
             }
-
-            // Store the grouped substeps and parsed data for later use
             mainRow.groupedSubSteps = main.subSteps || [];
             mainRow.oldParsedData = parsedMain;
-
-            // Get status color based on status
             const statusClass = this.getStatusClass(parsedMain);
-
-            // Create name cell with status indicator
             const nameCell = document.createElement("td");
-
-            // Add status indicator
             const statusSpan = document.createElement("span");
             statusSpan.className = `status-indicator ${statusClass}`;
             nameCell.appendChild(statusSpan);
-
-            // Add name with appropriate styling
             const nameStrong = document.createElement("strong");
             nameStrong.textContent = parsedMain.name;
             nameCell.appendChild(nameStrong);
-
-            // Add cell to row
             mainRow.appendChild(nameCell);
-
-            // Add data cells
             const completedCell = document.createElement("td");
             completedCell.textContent = parsedMain.completed;
             mainRow.appendChild(completedCell);
-
             const rejectedCell = document.createElement("td");
             rejectedCell.textContent = parsedMain.rejected;
             mainRow.appendChild(rejectedCell);
-
             const inProcessCell = document.createElement("td");
             inProcessCell.textContent = parsedMain.inProcess;
             mainRow.appendChild(inProcessCell);
-
             const pendingCell = document.createElement("td");
             pendingCell.textContent = parsedMain.pending;
             mainRow.appendChild(pendingCell);
-
-            // Add click event for expandable rows
             if (main.subSteps && main.subSteps.length > 0) {
               mainRow.addEventListener("click", () => {
                 const id = mainRow.getAttribute("data-main-row-id");
@@ -1051,30 +887,15 @@
             } else {
               mainRow.style.cursor = "default";
             }
-
             tableBody.appendChild(mainRow);
-
-            // Add sub-rows if any
             if (main.subSteps && main.subSteps.length > 0) {
               this.addSubRows(tableBody, main, parsedMain, mainRowCounter);
             }
           }
         },
-
-        /**
-         * Get CSS class based on status value - IMPROVED
-         * Maps the direct status field to the appropriate CSS class
-         *
-         * @param {Object} data - Status data with status field
-         * @returns {string} CSS class for status
-         */
         getStatusClass: function (data) {
           if (!data || !data.status) return "status-default";
-
           const status = data.status.toLowerCase();
-
-          // Map status strings to classes based on requirements
-          // This is a direct mapping from status field to CSS class
           if (status === "n/a") return "status-na";
           if (status === "failed" || status === "rejected")
             return "status-rejected";
@@ -1082,40 +903,21 @@
             return "status-in-progress";
           if (status === "completed") return "status-completed";
           if (status === "pending") return "status-pending";
-
-          return "status-default"; // Default grey for unknown status
+          return "status-default";
         },
-
-        /**
-         * Add sub-rows to table for a main step
-         * This function creates the hierarchical view of subprocesses in the table
-         *
-         * @param {HTMLElement} tableBody - Table body element
-         * @param {Object} main - Main step configuration
-         * @param {Object} parsedMain - Parsed main step data with subProcesses
-         * @param {number} mainRowCounter - Main row counter/ID
-         */
         addSubRows: function (tableBody, main, parsedMain, mainRowCounter) {
           console.log(
             `Adding sub-rows for ${main["Step Name"]} with ${
               parsedMain.subProcesses ? parsedMain.subProcesses.length : 0
             } subProcesses`
           );
-
-          // Check if row is expanded or collapsed
           const isExpanded = this.expandedRows.has(mainRowCounter.toString());
           const displayStyle = isExpanded ? "table-row" : "none";
-
-          // Get reference to the main row
           const mainRow = tableBody.querySelector(
             `tr[data-main-row-id="${mainRowCounter}"]`
           );
           if (!mainRow) return;
-
-          // Create sub-rows container
           const subRowsContainer = document.createElement("tbody");
-
-          // Add sub-header row
           const subHeaderRow = document.createElement("tr");
           subHeaderRow.classList.add("sub-header");
           subHeaderRow.setAttribute("data-parent-id", mainRowCounter);
@@ -1128,13 +930,8 @@
             <th>Pending</th>
           `;
           subRowsContainer.appendChild(subHeaderRow);
-
-          // Add sub-process rows (one for each substep)
           main.subSteps.forEach((sub) => {
-            // Find sub-process data either from direct API or from parent's subProcesses
             let parsedSub = null;
-
-            // Method 1: Try to get data from direct API call to the subprocess
             if (sub["API Name"] && DataManager.responses[sub["API Name"]]) {
               let resp = DataManager.responses[sub["API Name"]];
               parsedSub = DataManager.parseStatus(resp);
@@ -1143,19 +940,15 @@
                 parsedSub
               );
             }
-
-            // Method 2: If not found from API, look for it in the main process subProcesses array
             if (
               !parsedSub &&
               parsedMain.subProcesses &&
               parsedMain.subProcesses.length > 0
             ) {
-              // Find matching subprocess by name
               parsedSub = parsedMain.subProcesses.find(
                 (item) =>
                   item.name.toLowerCase() === sub["Step Name"].toLowerCase()
               );
-
               if (parsedSub) {
                 console.log(
                   `Found subprocess ${sub["Step Name"]} in parent's subProcesses array:`,
@@ -1163,8 +956,6 @@
                 );
               }
             }
-
-            // Method 3: If still not found, create default values
             if (!parsedSub) {
               console.log(
                 `No data found for subprocess ${sub["Step Name"]}, using defaults`
@@ -1178,11 +969,7 @@
                 pending: "0",
               };
             }
-
-            // Get status class
             const statusClass = this.getStatusClass(parsedSub);
-
-            // Create header-less sub-row
             const subRow = document.createElement("tr");
             subRow.classList.add("sub-process");
             subRow.setAttribute("data-parent-id", mainRowCounter);
@@ -1190,122 +977,81 @@
               subRow.setAttribute("data-api-name", sub["API Name"]);
             }
             subRow.style.display = displayStyle;
-
-            // Create nameCell with vertical line in a separate container
             const nameCell = document.createElement("td");
-
-            // Create an inner container div to hold all content
             const nameContainer = document.createElement("div");
             nameContainer.className = "cell-container";
-
-            // Add vertical line for SF and DS Load to show they're similar level
-            if (
+            /*if (
               parsedSub.name.includes("SF") ||
               parsedSub.name.includes("DS")
-            ) {
-              const verticalLine = document.createElement("span");
-              verticalLine.style.display = "inline-block";
-              verticalLine.style.width = "3px";
-              verticalLine.style.height = "14px";
-              verticalLine.style.backgroundColor = "#1483f3";
-              verticalLine.style.marginRight = "6px";
-              verticalLine.style.flexShrink = "0";
-              nameContainer.appendChild(verticalLine);
-            }
-
-            // Add status indicator
+            ) {*/
+            const verticalLine = document.createElement("span");
+            verticalLine.style.display = "inline-block";
+            verticalLine.style.width = "3px";
+            verticalLine.style.height = "14px";
+            verticalLine.style.backgroundColor = "#1483f3";
+            verticalLine.style.marginRight = "6px";
+            verticalLine.style.flexShrink = "0";
+            nameContainer.appendChild(verticalLine);
+            // }
             const statusSpan = document.createElement("span");
             statusSpan.className = `status-indicator ${statusClass}`;
             statusSpan.style.flexShrink = "0";
             statusSpan.style.marginRight = "6px";
             nameContainer.appendChild(statusSpan);
-
-            // Add name with proper spacing in a span to control overflow
             const nameSpan = document.createElement("span");
             nameSpan.className = "name-container";
             nameSpan.textContent = parsedSub.name;
             nameContainer.appendChild(nameSpan);
-
-            // Add the container to the cell
             nameCell.appendChild(nameContainer);
-
-            // Create the data cells for numeric values
             const completedCell = document.createElement("td");
             completedCell.textContent = parsedSub.completed;
-
             const rejectedCell = document.createElement("td");
             rejectedCell.textContent = parsedSub.rejected;
-
             const inProcessCell = document.createElement("td");
             inProcessCell.textContent = parsedSub.inProcess;
-
             const pendingCell = document.createElement("td");
             pendingCell.textContent = parsedSub.pending;
-
-            // Append all cells to the row
             subRow.appendChild(nameCell);
             subRow.appendChild(completedCell);
             subRow.appendChild(rejectedCell);
             subRow.appendChild(inProcessCell);
             subRow.appendChild(pendingCell);
-
             subRowsContainer.appendChild(subRow);
           });
-
-          // Add separator and spacer rows
           const separatorRow = document.createElement("tr");
-          separatorRow.classList.add("separator-row");
-          separatorRow.setAttribute("data-parent-id", mainRowCounter);
-          separatorRow.style.display = displayStyle;
-          separatorRow.innerHTML = `<td colspan="5"></td>`;
-          subRowsContainer.appendChild(separatorRow);
-
+          //separatorRow.classList.add("separator-row");
+          //separatorRow.setAttribute("data-parent-id", mainRowCounter);
+          //separatorRow.style.display = displayStyle;
+          //separatorRow.innerHTML = `<td colspan="5"></td>`;
+          //subRowsContainer.appendChild(separatorRow);
           const spacerRow = document.createElement("tr");
-          spacerRow.classList.add("spacer-row");
-          spacerRow.setAttribute("data-parent-id", mainRowCounter);
-          spacerRow.style.display = displayStyle;
-          spacerRow.innerHTML = `<td colspan="5"></td>`;
-          subRowsContainer.appendChild(spacerRow);
-
-          // Insert sub-rows right after the main row
+          //spacerRow.classList.add("spacer-row");
+          //spacerRow.setAttribute("data-parent-id", mainRowCounter);
+          //spacerRow.style.display = displayStyle;
+          //spacerRow.innerHTML = `<td colspan="5"></td>`;
+          //subRowsContainer.appendChild(spacerRow);
           if (mainRow.nextSibling) {
             tableBody.insertBefore(subRowsContainer, mainRow.nextSibling);
           } else {
             tableBody.appendChild(subRowsContainer);
           }
-
-          // Move all child nodes from subRowsContainer to tableBody
           while (subRowsContainer.firstChild) {
             tableBody.insertBefore(
               subRowsContainer.firstChild,
               subRowsContainer
             );
           }
-
-          // Remove the temporary container
           if (subRowsContainer.parentNode) {
             subRowsContainer.parentNode.removeChild(subRowsContainer);
           }
         },
-
-        /**
-         * Toggle row expansion (show/hide sub-rows)
-         * @param {string} rowId - Row ID
-         * @param {HTMLElement} mainRow - Main row element
-         */
         toggleRowExpansion: function (rowId, mainRow) {
           const tableBody = document.querySelector("#sfTable tbody");
-
-          // Find all sub-rows associated with this main row
           const subRows = tableBody.querySelectorAll(
             "[data-parent-id='" + rowId + "']"
           );
-
-          // Check if currently expanded
           let isExpanded = this.expandedRows.has(rowId);
           const newDisplay = isExpanded ? "none" : "table-row";
-
-          // Toggle expansion state
           if (isExpanded) {
             this.expandedRows.delete(rowId);
             mainRow.classList.remove("expanded");
@@ -1313,119 +1059,69 @@
             this.expandedRows.add(rowId);
             mainRow.classList.add("expanded");
           }
-
-          // Show/hide all sub-rows
           subRows.forEach((row) => {
             row.style.display = newDisplay;
           });
         },
-
-        /**
-         * Update table row for a specific step when API data changes
-         * This is a critical function that handles updates to both main rows and sub-rows
-         *
-         * @param {Object} step - Step configuration
-         * @param {Object} updatedResponse - Updated API response
-         */
         updateTableRowForStep: function (step, updatedResponse) {
-          // Parse data from updated response using the enhanced parsing function
           let parsedData = DataManager.parseStatus(updatedResponse);
           console.log(`Updating ${step["Step Name"]} with:`, parsedData);
-
           if (!parsedData) return;
-
-          // Find main row in the table
           let mainRow = document.querySelector(
             "tr[data-step-number='" + step["Step Number"] + "']"
           );
           if (!mainRow) return;
-
-          // Get row ID and check expansion state
           let mainRowId = mainRow.getAttribute("data-main-row-id");
           if (!mainRowId) return;
-
-          // Update main row content
           const statusClass = this.getStatusClass(parsedData);
-
-          // Create structured name cell
           const nameCell = document.createElement("td");
-
-          // Add status indicator
           const statusSpan = document.createElement("span");
           statusSpan.className = `status-indicator ${statusClass}`;
           nameCell.appendChild(statusSpan);
-
-          // Add name in strong tag with margin for expandable rows
           const nameStrong = document.createElement("strong");
           nameStrong.textContent = parsedData.name;
           nameCell.appendChild(nameStrong);
-
-          // Create data cells with proper alignment
           const completedCell = document.createElement("td");
           completedCell.textContent = parsedData.completed;
-
           const rejectedCell = document.createElement("td");
           rejectedCell.textContent = parsedData.rejected;
-
           const inProcessCell = document.createElement("td");
           inProcessCell.textContent = parsedData.inProcess;
-
           const pendingCell = document.createElement("td");
           pendingCell.textContent = parsedData.pending;
-
-          // Clear existing content and add structured cells
           mainRow.innerHTML = "";
           mainRow.appendChild(nameCell);
           mainRow.appendChild(completedCell);
           mainRow.appendChild(rejectedCell);
           mainRow.appendChild(inProcessCell);
           mainRow.appendChild(pendingCell);
-
-          // Restore expand style if it exists
           if (mainRow.classList.contains("expandable")) {
             const isExpanded = this.expandedRows.has(mainRowId);
             if (isExpanded) {
               mainRow.classList.add("expanded");
             }
           }
-
-          // Remove existing sub-rows
           const tableBody = document.querySelector("#sfTable tbody");
           const existingSubRows = tableBody.querySelectorAll(
             "[data-parent-id='" + mainRowId + "']"
           );
           existingSubRows.forEach((row) => row.remove());
-
-          // Get old parsed data and merge with new
           let oldParsedData = mainRow.oldParsedData || { subProcesses: [] };
-
-          // Log subProcesses from new response to ensure they are being handled
           console.log(
             `${step["Step Name"]} subProcesses:`,
             parsedData.subProcesses ? parsedData.subProcesses.length : 0
           );
-
-          // Merge old and new subProcesses to preserve data during transitions
           let mergedSubProcesses = this.mergeSubProcesses(
             oldParsedData.subProcesses || [],
             parsedData.subProcesses || []
           );
-
-          // Update old parsed data
           mainRow.oldParsedData = {
             ...parsedData,
             subProcesses: mergedSubProcesses,
           };
-
-          // Get sub-steps and add them back
           let groupedSubSteps = mainRow.groupedSubSteps || [];
           if (groupedSubSteps.length > 0) {
-            // Create virtual main step for addSubRows
-            const virtualMain = {
-              subSteps: groupedSubSteps,
-            };
-
-            // Add sub-rows with merged data
+            const virtualMain = { subSteps: groupedSubSteps };
             this.addSubRows(
               tableBody,
               virtualMain,
@@ -1434,13 +1130,6 @@
             );
           }
         },
-
-        /**
-         * Merge old and new sub-processes to preserve data during transitions
-         * @param {Array} oldSubProcesses - Old sub-processes
-         * @param {Array} newSubProcesses - New sub-processes
-         * @returns {Array} Merged sub-processes
-         */
         mergeSubProcesses: function (oldSubProcesses, newSubProcesses) {
           console.log(
             "Merging subprocesses:",
@@ -1449,72 +1138,96 @@
             "New:",
             newSubProcesses.length
           );
-
-          // Create map of new sub-processes for quick lookup
           const mapNew = {};
           newSubProcesses.forEach((proc) => {
             mapNew[proc.name] = proc;
           });
-
-          // Map old sub-processes, replacing with new if available
           const merged = oldSubProcesses.map((oldProc) =>
             mapNew[oldProc.name] ? mapNew[oldProc.name] : oldProc
           );
-
-          // Add any new sub-processes not in old list
           newSubProcesses.forEach((newProc) => {
             if (!merged.some((m) => m.name === newProc.name)) {
               merged.push(newProc);
             }
           });
-
           console.log("Merged subprocesses count:", merged.length);
           return merged;
         },
       };
     </script>
-
-    <!-- Diagram View Module -->
+    <!-- Diagram View Module with minimap functionality -->
     <script>
-      // Diagram View Module
       const DiagramView = {
         expandedMains: new Set(),
         nodeLookup: {},
-
-        /**
-         * Initialize diagram view
-         */
         init: function () {
           this.setupTooltip();
+          this.setupPan(); // Enable mouse panning
+          // Center Diagram button event listener
+          document.getElementById("centerBtn").addEventListener("click", () => {
+            this.centerDiagram();
+          });
           this.expandTopLevelNodes();
           this.buildDiagram();
-
-          // Handle window resize
+          this.buildMinimap(); // Build the minimap after diagram is built
           window.addEventListener(
             "resize",
             Utils.debounce(() => {
               this.buildDiagram();
+              this.buildMinimap();
             }, 200)
           );
         },
-
-        /**
-         * Setup tooltip for diagram nodes
-         */
         setupTooltip: function () {
           this.tooltip = document.getElementById("diagram-tooltip");
           const diagram = document.getElementById("diagram");
-
           diagram.addEventListener("mousemove", (e) => {
-            // Position tooltip near mouse
             this.tooltip.style.left = e.pageX + 10 + "px";
             this.tooltip.style.top = e.pageY + 10 + "px";
           });
         },
-
-        /**
-         * Expand top level nodes on init
-         */
+        setupPan: function () {
+          const svg = document.getElementById("diagram");
+          let isPanning = false;
+          let startX, startY, startViewBox;
+          svg.addEventListener("mousedown", function (e) {
+            isPanning = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            const viewBoxValues = svg
+              .getAttribute("viewBox")
+              .split(" ")
+              .map(Number);
+            startViewBox = {
+              x: viewBoxValues[0],
+              y: viewBoxValues[1],
+              w: viewBoxValues[2],
+              h: viewBoxValues[3],
+            };
+          });
+          svg.addEventListener("mousemove", function (e) {
+            if (!isPanning) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const scaleX = startViewBox.w / svg.clientWidth;
+            const scaleY = startViewBox.h / svg.clientHeight;
+            const newX = startViewBox.x - dx * scaleX;
+            const newY = startViewBox.y - dy * scaleY;
+            svg.setAttribute(
+              "viewBox",
+              `${newX} ${newY} ${startViewBox.w} ${startViewBox.h}`
+            );
+            DiagramView.updateMinimapViewport();
+          });
+          document.addEventListener("mouseup", function () {
+            isPanning = false;
+          });
+        },
+        centerDiagram: function () {
+          const svg = document.getElementById("diagram");
+          svg.setAttribute("viewBox", "0 0 1200 800");
+          this.updateMinimapViewport();
+        },
         expandTopLevelNodes: function () {
           DataManager.steps.forEach((step) => {
             if (step.Type === "MAIN" && step["Parent Steps"].trim() === "0") {
@@ -1522,33 +1235,14 @@
             }
           });
         },
-
-        /**
-         * Update diagram after data change
-         * Enhanced to ensure proper updates
-         */
         update: function () {
           console.log("Updating diagram with latest status data");
-
-          // Clear any cached data that might prevent a proper update
           this.cachedData = null;
-
-          // Fully rebuild the diagram
           this.buildDiagram();
-
-          // Log update completion for debugging
+          this.buildMinimap();
           console.log("Diagram update complete");
         },
-
-        /**
-         * Get node status - improved function to get accurate status for any node
-         * This is critical for proper diagram coloring
-         *
-         * @param {Object} node - Node to get status for
-         * @returns {Object} Status object with status and counts
-         */
         getNodeStatus: function (node) {
-          // Default return value
           let result = {
             status: "unknown",
             completed: "0",
@@ -1556,8 +1250,6 @@
             inProcess: "0",
             pending: "0",
           };
-
-          // Case 1: Node has its own API
           if (node["API Name"] && DataManager.responses[node["API Name"]]) {
             const parsedData = DataManager.parseStatus(
               DataManager.responses[node["API Name"]]
@@ -1570,22 +1262,16 @@
               return parsedData;
             }
           }
-
-          // Case 2: For SUB nodes without API, check parent's subProcesses
           if (node.Type === "SUB" && node["Parent Steps"]) {
             const parentSteps = node["Parent Steps"]
               .split(",")
               .map((p) => p.trim());
-
-            // Try each parent
             for (let parentId of parentSteps) {
               const parentNode = DataManager.getStepByNumber(parentId);
               if (!parentNode || !parentNode["API Name"]) continue;
-
               const parentResponse =
                 DataManager.responses[parentNode["API Name"]];
               if (!parentResponse) continue;
-
               const parsedParent = DataManager.parseStatus(parentResponse);
               if (
                 !parsedParent ||
@@ -1593,14 +1279,11 @@
                 !parsedParent.subProcesses.length
               )
                 continue;
-
-              // Find this node in parent's subProcesses
               const subProcess = parsedParent.subProcesses.find(
                 (sp) =>
                   sp.name &&
                   sp.name.toLowerCase() === node["Step Name"].toLowerCase()
               );
-
               if (subProcess) {
                 console.log(
                   `Found subprocess ${node["Step Name"]} in parent ${parentNode["Step Name"]} with status: ${subProcess.status}`
@@ -1615,24 +1298,15 @@
               }
             }
           }
-
           return result;
         },
-
-        /**
-         * Get visible nodes based on expanded state
-         * @returns {Array} Array of visible nodes
-         */
         getVisibleNodes: function () {
           const mainNodes = DataManager.steps.filter((d) => d.Type === "MAIN");
           const subNodes = DataManager.steps.filter((d) => d.Type === "SUB");
           const visibleSubs = [];
-
           subNodes.forEach((sub) => {
             if (!sub["Parent Steps"]) return;
-
             const parents = sub["Parent Steps"].split(",").map((p) => p.trim());
-
             for (let pid of parents) {
               if (this.expandedMains.has(pid)) {
                 visibleSubs.push(sub);
@@ -1640,41 +1314,22 @@
               }
             }
           });
-
           return [...mainNodes, ...visibleSubs];
         },
-
-        /**
-         * Build SVG diagram
-         */
         buildDiagram: function () {
           const svg = document.getElementById("diagram");
-
-          // Clear SVG
           while (svg.firstChild) {
             svg.removeChild(svg.firstChild);
           }
-
-          // Reset node lookup
           this.nodeLookup = {};
-
-          // Get visible nodes
           const visibleNodes = this.getVisibleNodes();
-
-          // Compute layout
           this.computeLayout(visibleNodes);
-
-          // Create node map for quick lookup
           const mapVisible = {};
           visibleNodes.forEach((d) => {
             mapVisible[d["Step Number"]] = d;
           });
-
-          // Get SVG dimensions
           const SVG_WIDTH = svg.clientWidth;
           const SVG_HEIGHT = svg.clientHeight;
-
-          // Create arrow marker definition
           const defs = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "defs"
@@ -1690,49 +1345,32 @@
           marker.setAttribute("markerWidth", "6");
           marker.setAttribute("markerHeight", "6");
           marker.setAttribute("orient", "auto-start-reverse");
-
           const path = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "path"
           );
           path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
           path.setAttribute("fill", "#555");
-
           marker.appendChild(path);
           defs.appendChild(marker);
           svg.appendChild(defs);
-
-          // Draw edges first (to appear behind nodes)
           this.drawEdges(svg, visibleNodes, mapVisible);
-
-          // Draw nodes
           this.drawNodes(svg, visibleNodes);
         },
-
-        /**
-         * Compute layout for diagram nodes
-         * @param {Array} visibleData - Array of visible nodes
-         */
         computeLayout: function (visibleData) {
           const svg = document.getElementById("diagram");
           const SVG_WIDTH = svg.clientWidth;
           const SVG_HEIGHT = svg.clientHeight;
-
-          // Layout constants
           const NODE_WIDTH = 120;
           const NODE_HEIGHT = 40;
           const LEVEL_VERTICAL_SPACING = 100;
           const MARGIN_X = 50;
           const SUB_EXTRA_SPACE = 50;
-
-          // Create node map and initialize levels
           const nodesMap = {};
           visibleData.forEach((d) => {
             d.level = d["Parent Steps"].trim() === "0" ? 0 : undefined;
             nodesMap[d["Step Number"]] = d;
           });
-
-          // Calculate levels with topological sort
           let changed = true;
           while (changed) {
             changed = false;
@@ -1741,7 +1379,6 @@
                 const parents = item["Parent Steps"]
                   .split(",")
                   .map((s) => s.trim());
-
                 let maxParentLevel = -1;
                 parents.forEach((pid) => {
                   const parent = nodesMap[pid];
@@ -1753,7 +1390,6 @@
                     maxParentLevel = parent.level;
                   }
                 });
-
                 const newLevel = maxParentLevel + 1;
                 if (item.level === undefined || newLevel > item.level) {
                   item.level = newLevel;
@@ -1762,8 +1398,6 @@
               }
             });
           }
-
-          // Group nodes by level
           const levelsMap = {};
           visibleData.forEach((item) => {
             if (!levelsMap[item.level]) {
@@ -1771,35 +1405,23 @@
             }
             levelsMap[item.level].push(item);
           });
-
-          // Calculate positions
           const baseY = 50;
           const offsets = {};
           offsets[0] = 0;
-
-          // Sort levels
           const levelsSorted = Object.keys(levelsMap)
             .map(Number)
             .sort((a, b) => a - b);
-
-          // Position nodes by level
           levelsSorted.forEach((level) => {
             const nodesAtLevel = levelsMap[level];
             const count = nodesAtLevel.length;
-
-            // Distribute nodes horizontally
             const spacingX = Math.max(
               NODE_WIDTH + 20,
               (SVG_WIDTH - 2 * MARGIN_X) / (count + 1)
             );
-
-            // Position nodes
             nodesAtLevel.forEach((node, i) => {
               node.x = MARGIN_X + spacingX * (i + 1) - NODE_WIDTH / 2;
               node.y =
                 baseY + level * LEVEL_VERTICAL_SPACING + (offsets[level] || 0);
-
-              // Store node in lookup
               this.nodeLookup[node["Step Number"]] = {
                 x: node.x,
                 y: node.y,
@@ -1807,8 +1429,6 @@
                 height: NODE_HEIGHT,
               };
             });
-
-            // Calculate extra space for expanded nodes
             let extra = 0;
             nodesAtLevel.forEach((node) => {
               if (
@@ -1825,91 +1445,58 @@
                   }
                   return false;
                 }).length;
-
                 if (subCount > 0) {
                   extra = Math.max(extra, subCount * SUB_EXTRA_SPACE);
                 }
               }
             });
-
-            // Set offset for next level
             offsets[level + 1] = (offsets[level] || 0) + extra;
           });
         },
-
-        /**
-         * Draw edges between nodes
-         * @param {SVGElement} svg - SVG element
-         * @param {Array} visibleNodes - Array of visible nodes
-         * @param {Object} mapVisible - Map of visible nodes
-         */
         drawEdges: function (svg, visibleNodes, mapVisible) {
-          // Node dimensions
           const NODE_WIDTH = 120;
           const NODE_HEIGHT = 40;
-
           visibleNodes.forEach((child) => {
             if (!child["Parent Steps"] || child["Parent Steps"].trim() === "0")
               return;
-
             const parents = child["Parent Steps"]
               .split(",")
               .map((s) => s.trim());
-
             parents.forEach((pid) => {
               const parent = mapVisible[pid];
               if (!parent) return;
-
-              // Calculate path
               const startX = parent.x + NODE_WIDTH / 2;
               const startY = parent.y + NODE_HEIGHT;
               const endX = child.x + NODE_WIDTH / 2;
               const endY = child.y;
-
-              // Create bezier curve for smoother edges
               const controlPoint1X = startX;
               const controlPoint1Y = startY + (endY - startY) / 3;
               const controlPoint2X = endX;
               const controlPoint2Y = endY - (endY - startY) / 3;
-
-              // Create path
               const line = document.createElementNS(
                 "http://www.w3.org/2000/svg",
                 "path"
               );
-
               line.setAttribute(
                 "d",
                 `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`
               );
               line.setAttribute("class", "edge");
               line.setAttribute("fill", "none");
-
               svg.appendChild(line);
             });
           });
         },
-
-        /**
-         * Draw nodes - IMPROVED to use proper status lookup
-         * @param {SVGElement} svg - SVG element
-         * @param {Array} visibleNodes - Array of visible nodes
-         */
         drawNodes: function (svg, visibleNodes) {
-          // Node dimensions
           const NODE_WIDTH = 120;
           const NODE_HEIGHT = 40;
-
           visibleNodes.forEach((node) => {
-            // Create node group
             const g = document.createElementNS(
               "http://www.w3.org/2000/svg",
               "g"
             );
             g.setAttribute("class", "node");
             g.setAttribute("id", "node-" + node["Step Number"]);
-
-            // Create node rectangle
             const rect = document.createElementNS(
               "http://www.w3.org/2000/svg",
               "rect"
@@ -1920,60 +1507,46 @@
             rect.setAttribute("height", NODE_HEIGHT);
             rect.setAttribute("rx", "10");
             rect.setAttribute("ry", "10");
-
-            // Set default node style
-            let fillColor = "#808080"; // Default gray
+            let fillColor = "#808080";
             let strokeWidth = "4";
             let strokeColor = "#606060";
             let strokeDashArray = "none";
-
-            // Use our improved helper function to get accurate status
             const parsedStatus = this.getNodeStatus(node);
-
             console.log(
               `Drawing node: ${node["Step Name"]}, Status: ${parsedStatus.status}`
             );
-
             if (parsedStatus) {
-              // Determine color based on direct status field
               const status = parsedStatus.status
                 ? parsedStatus.status.toLowerCase()
                 : "";
-
-              // Color mapping according to requirements
               if (status === "n/a") {
-                fillColor = "#000000"; // Black for N/A
+                fillColor = "#000000";
                 strokeColor = "#333333";
               } else if (status === "failed" || status === "rejected") {
-                fillColor = "#e74c3c"; // Red for failed/rejected
+                fillColor = "#e74c3c";
                 strokeColor = "#c0392b";
               } else if (status === "running" || status === "in process") {
-                fillColor = "#2ecc71"; // Green for running/in-process
+                fillColor = "#2ecc71";
                 strokeColor = "#27ae60";
-                strokeDashArray = "5, 5"; // Dashed for in-process
+                strokeDashArray = "5, 5";
               } else if (status === "completed") {
-                fillColor = "#2ecc71"; // Green for completed
+                fillColor = "#2ecc71";
                 strokeColor = "#27ae60";
               } else if (status === "pending") {
-                fillColor = "#ffffff"; // White for pending
+                fillColor = "#ffffff";
                 strokeColor = "#999999";
               } else {
-                fillColor = "#808080"; // Gray for rest/default
+                fillColor = "#808080";
                 strokeColor = "#606060";
               }
             }
-
-            // Apply styles to rectangle
             rect.setAttribute("fill", fillColor);
             rect.setAttribute("stroke", strokeColor);
             rect.setAttribute("stroke-width", strokeWidth);
             if (strokeDashArray !== "none") {
               rect.setAttribute("stroke-dasharray", strokeDashArray);
             }
-
             g.appendChild(rect);
-
-            // Create node text
             const text = document.createElementNS(
               "http://www.w3.org/2000/svg",
               "text"
@@ -1982,94 +1555,58 @@
             text.setAttribute("y", node.y + NODE_HEIGHT / 2 + 5);
             text.setAttribute("text-anchor", "middle");
             text.setAttribute("font-size", "12");
-
-            // Set text color based on background for readability
             if (fillColor === "#ffffff" || fillColor === "#f2f2f2") {
               text.setAttribute("fill", "#333333");
             } else {
               text.setAttribute("fill", "#ffffff");
             }
-
-            // Truncate long text
             let stepName = node["Step Name"] || "";
             if (stepName.length > 15) {
               stepName = stepName.substring(0, 12) + "...";
             }
-
             text.textContent = stepName;
             g.appendChild(text);
-
-            // Add event listeners
             if (node.Type === "MAIN") {
-              // Click to expand/collapse
               g.addEventListener("click", (e) => {
                 e.stopPropagation();
                 this.toggleMainExpand(node["Step Number"]);
               });
-
-              // Mouse over to show tooltip
               g.addEventListener("mouseenter", () => {
                 this.showNodeTooltip(node);
               });
-
               g.addEventListener("mouseleave", () => {
                 this.hideNodeTooltip();
               });
             } else {
-              // Mouse over to show tooltip for sub nodes
               g.addEventListener("mouseenter", () => {
                 this.showNodeTooltip(node);
               });
-
               g.addEventListener("mouseleave", () => {
                 this.hideNodeTooltip();
               });
             }
-
             svg.appendChild(g);
           });
         },
-
-        /**
-         * Show tooltip for node - IMPROVED to show accurate status
-         * @param {Object} node - Node data
-         */
         showNodeTooltip: function (node) {
           if (!this.tooltip) return;
-
-          // Get the most accurate status data for this node
           const nodeStatus = this.getNodeStatus(node);
-
           let tooltipContent = `<strong>${node["Step Name"]}</strong><br>Type: ${node.Type}`;
-
-          // If node has an API, show it
           if (node["API Name"]) {
             tooltipContent += `<br>API: ${node["API Name"]}`;
           }
-
-          // Add status information
           tooltipContent += `<br>Status: <b>${nodeStatus.status}</b>`;
           tooltipContent += `<br>Completed: ${nodeStatus.completed}`;
           tooltipContent += `<br>Rejected: ${nodeStatus.rejected}`;
           tooltipContent += `<br>In Process: ${nodeStatus.inProcess}`;
           tooltipContent += `<br>Pending: ${nodeStatus.pending}`;
-
           this.tooltip.innerHTML = tooltipContent;
           this.tooltip.style.opacity = "1";
         },
-
-        /**
-         * Hide node tooltip
-         */
         hideNodeTooltip: function () {
           if (!this.tooltip) return;
           this.tooltip.style.opacity = "0";
         },
-
-        /**
-         * Toggle expansion of main node
-         * @param {string} mainId - Main node ID
-         */
         toggleMainExpand: function (mainId) {
           if (this.expandedMains.has(mainId)) {
             this.expandedMains.delete(mainId);
@@ -2077,7 +1614,63 @@
             this.expandedMains.add(mainId);
           }
           this.buildDiagram();
+          this.buildMinimap();
         },
+      };
+    </script>
+    <script>
+      // Additional DiagramView functions for minimap functionality
+      DiagramView.buildMinimap = function () {
+        const scaleFactor = 0.2; // Scale factor for the minimap
+        const mainSvg = document.getElementById("diagram");
+        const minimapSvg = document.getElementById("minimap");
+        // Clear the minimap SVG content
+        while (minimapSvg.firstChild) {
+          minimapSvg.removeChild(minimapSvg.firstChild);
+        }
+        // Add the viewport rectangle (to be updated later)
+        const viewportRect = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "rect"
+        );
+        viewportRect.setAttribute("id", "minimap-viewport");
+        viewportRect.setAttribute("fill", "none");
+        viewportRect.setAttribute("stroke", "red");
+        viewportRect.setAttribute("stroke-width", "2");
+        minimapSvg.appendChild(viewportRect);
+        // Draw scaled-down nodes on the minimap
+        const visibleNodes = DiagramView.getVisibleNodes();
+        visibleNodes.forEach((node) => {
+          const scaledX = node.x * scaleFactor;
+          const scaledY = node.y * scaleFactor;
+          const scaledWidth = 120 * scaleFactor;
+          const scaledHeight = 40 * scaleFactor;
+          const rect = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect"
+          );
+          rect.setAttribute("x", scaledX);
+          rect.setAttribute("y", scaledY);
+          rect.setAttribute("width", scaledWidth);
+          rect.setAttribute("height", scaledHeight);
+          rect.setAttribute("fill", "#1483f3");
+          rect.setAttribute("stroke", "#606060");
+          rect.setAttribute("stroke-width", "1");
+          minimapSvg.appendChild(rect);
+        });
+        // Update the viewport rectangle based on the main diagram's viewBox
+        this.updateMinimapViewport();
+      };
+
+      DiagramView.updateMinimapViewport = function () {
+        const scaleFactor = 0.2;
+        const mainSvg = document.getElementById("diagram");
+        const viewBox = mainSvg.getAttribute("viewBox").split(" ").map(Number);
+        const minimapViewport = document.getElementById("minimap-viewport");
+        minimapViewport.setAttribute("x", viewBox[0] * scaleFactor);
+        minimapViewport.setAttribute("y", viewBox[1] * scaleFactor);
+        minimapViewport.setAttribute("width", viewBox[2] * scaleFactor);
+        minimapViewport.setAttribute("height", viewBox[3] * scaleFactor);
       };
     </script>
   </body>
