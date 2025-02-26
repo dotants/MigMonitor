@@ -107,6 +107,111 @@
       <RelativePath>Implementation\LogicalUnits\MigDummy\Broadway\s3LoadStatus.flow</RelativePath>
       <CategoryKey>Implementation\LogicalUnits\MigDummy\Broadway@loadStatus</CategoryKey>
     </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>dummyEntOrch.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\dummyEntOrch.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>dummyBatchOrch.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\dummyBatchOrch.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>sfLoadDummyProc.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\sfLoadDummyProc.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>initSfCounters.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\initSfCounters.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows@initProcess</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>initDsCounters.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\initDsCounters.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows@initProcess</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>dsLoadDummyProc.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\dsLoadDummyProc.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s1dummyEntOrch.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\s1dummyEntOrch.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s2LoadDummyProc.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\s2LoadDummyProc.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>initS2Counters.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\initS2Counters.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows@initProcess</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>initS3Counters.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\initS3Counters.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows@initProcess</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s3LoadDummyProc.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\s3LoadDummyProc.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>sfLoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\sfLoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s1LoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\s1LoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s2LoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\s2LoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>ponrStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\ponrStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>extractStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\extractStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>dsLoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\dsLoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>genIdList.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\genIdList.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@Utility</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>getMigExecId.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\getMigExecId.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@Utility</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>removeFailedFromList.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\removeFailedFromList.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@Utility</CategoryKey>
+    </ProjectItemProp>
+    <ProjectItemProp>
+      <NodeName>s3LoadStatus.flow</NodeName>
+      <RelativePath>Implementation\LogicalUnits\Monitor\Broadway\s3LoadStatus.flow</RelativePath>
+      <CategoryKey>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</CategoryKey>
+    </ProjectItemProp>
   </ProjectItemPropList>
   <ProjectItemsCategoryList>
     <ProjectItemsCategory>
@@ -124,6 +229,22 @@
     <ProjectItemsCategory>
       <Name>Utility</Name>
       <Key>Implementation\LogicalUnits\MigDummy\Broadway@Utility</Key>
+    </ProjectItemsCategory>
+    <ProjectItemsCategory>
+      <Name>dummyMigFlows</Name>
+      <Key>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows</Key>
+    </ProjectItemsCategory>
+    <ProjectItemsCategory>
+      <Name>initProcess</Name>
+      <Key>Implementation\LogicalUnits\Monitor\Broadway@dummyMigFlows@initProcess</Key>
+    </ProjectItemsCategory>
+    <ProjectItemsCategory>
+      <Name>loadStatus</Name>
+      <Key>Implementation\LogicalUnits\Monitor\Broadway@loadStatus</Key>
+    </ProjectItemsCategory>
+    <ProjectItemsCategory>
+      <Name>Utility</Name>
+      <Key>Implementation\LogicalUnits\Monitor\Broadway@Utility</Key>
     </ProjectItemsCategory>
   </ProjectItemsCategoryList>
 </ProjectItemsProperties>
