@@ -54,11 +54,40 @@ stages:
         in:
           flowName:
             const: genIdList
+          listLength:
+            external: listLength
+            schema: integer
+            mandatory: false
         out:
           idList:
             schema: string
           listLength:
             schema: integer
+      Dummy params logger:
+        parent: Logger
+        in:
+          message:
+            const: "\r\nValidation Only ind: ${valOnlyInd}\r\nText Parameter:   ${textParam}\r\
+              \nList Length integer param: ${listLength}\r\nDummy Date param: ${dummyDate}\r\
+              \n"
+          level:
+            const: info
+          valOnlyInd:
+            external: valOnlyInd
+            schema: string
+            mandatory: false
+          textParam:
+            external: textParam
+            schema: string
+            mandatory: false
+          listLength:
+            external: listLength
+            schema: integer
+            mandatory: false
+          dummyDate:
+            external: dummyDate
+            schema: string
+            mandatory: false
   Extract batch:
     actors:
       Extract/Load Batch Command:

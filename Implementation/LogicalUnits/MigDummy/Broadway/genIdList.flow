@@ -1,6 +1,18 @@
 stages:
-  Stage 1:
+  Stage 1: {
+    }
+  Random list length:
+    dependsOn: Stage 1
     actors:
+      List Length is zero:
+        parent: Equals
+        condition: result
+        in:
+          b:
+            const: 0
+            schema: integer
+          a:
+            external: listLength
       Random List Length:
         parent: RandomNumber
         in:
@@ -11,15 +23,31 @@ stages:
         out:
           value:
             external: listLength
+    split: '--------------------'
+  Parameter list length:
+    else: true
+    dependsOn: Stage 1
+    actors:
+      listLength:
+        parent: Const
+        in:
+          value:
+            const: null
+            external: listLength
+        out:
+          value:
+            schema: integer
   Stage 2:
     actors:
       For Loop:
         parent: ForLoop
         in:
           from:
-            const: 1
+            const: 0
           to:
-            link: Random List Length/value
+            link:
+            - Random List Length/value
+            - listLength/value
   Stage 3:
     actors:
       StringFormat1:
