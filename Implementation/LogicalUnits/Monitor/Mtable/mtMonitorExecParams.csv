@@ -1,0 +1,5 @@
+param name,param type,valid values
+valOnlyInd, text,"Y,N"
+textParam,text,
+listLength,number,>0
+dummyDate,date
