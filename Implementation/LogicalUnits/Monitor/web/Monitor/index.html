@@ -46,6 +46,48 @@
         border-radius: 4px;
         cursor: pointer;
       }
+      .reset-btn {
+        position: absolute;
+        top: 12px;
+        right: 20px;
+        z-index: 1100;
+        padding: 5px 10px;
+        background-color: #1483f3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .zoom-percentage {
+        position: absolute;
+        top: 217px;
+        left: 500px;
+        z-index: 1200;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 5px 8px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .zoom-btn {
+        position: absolute;
+        top: 217px;
+        z-index: 1100;
+        padding: 5px 10px;
+        background-color: #1483f3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      /* Positioning: for example, the plus will be next to center/reset, and minus will be next to it */
+      #zoomInBtn {
+        right: 42px;
+      }
+      #zoomOutBtn {
+        right: 142px;
+      }
       /* Drag hint overlay to inform the user they can drag the diagram */
       .drag-hint {
         position: absolute;
@@ -161,6 +203,7 @@
       }
       .sub-process td:first-child {
         padding-left: 25px;
+        border: 1px solid #000000;
       }
       .hierarchy-indicator {
         display: inline-block;
@@ -298,8 +341,14 @@
       <div class="diagram-container">
         <!-- Center Diagram Button -->
         <button class="center-btn" id="centerBtn">Center Diagram</button>
+        <button class="reset-btn" id="resetBtn">↺</button>
+        <button id="zoomInBtn" class="zoom-btn">+</button>
+        <button id="zoomOutBtn" class="zoom-btn">–</button>
+
+        <!-- New element for zoom percentage -->
+        <div id="zoomPercentage" class="zoom-percentage">100%</div>
         <!-- Drag Hint Overlay -->
-        <div class="drag-hint">Drag to pan diagram</div>
+        <!--<div class="drag-hint">Drag to pan diagram</div> -->
         <!-- Main SVG Diagram -->
         <svg
           id="diagram"
@@ -1004,12 +1053,16 @@
             nameContainer.appendChild(nameSpan);
             nameCell.appendChild(nameContainer);
             const completedCell = document.createElement("td");
+            completedCell.style.border = "1px solid #000000";
             completedCell.textContent = parsedSub.completed;
             const rejectedCell = document.createElement("td");
+            rejectedCell.style.border = "1px solid #000000";
             rejectedCell.textContent = parsedSub.rejected;
             const inProcessCell = document.createElement("td");
+            inProcessCell.style.border = "1px solid #000000";
             inProcessCell.textContent = parsedSub.inProcess;
             const pendingCell = document.createElement("td");
+            pendingCell.style.border = "1px solid #000000";
             pendingCell.textContent = parsedSub.pending;
             subRow.appendChild(nameCell);
             subRow.appendChild(completedCell);
@@ -1163,13 +1216,60 @@
         init: function () {
           this.setupTooltip();
           this.setupPan(); // Enable mouse panning
+
+          // Attach event listener to the reset button
+          document.getElementById("resetBtn").addEventListener("click", () => {
+            this.resetDiagram();
+          });
+
           // Center Diagram button event listener
           document.getElementById("centerBtn").addEventListener("click", () => {
             this.centerDiagram();
           });
+
+          // Add zoom button event listeners (properly scoped)
+          document.getElementById("zoomInBtn").addEventListener("click", () => {
+            const svg = document.getElementById("diagram");
+            const viewBox = svg.getAttribute("viewBox").split(" ").map(Number);
+            const scale = 0.95; // 5% smaller
+            const newWidth = viewBox[2] * scale;
+            const newHeight = viewBox[3] * scale;
+            const newX = viewBox[0] + (viewBox[2] - newWidth) / 2;
+            const newY = viewBox[1] + (viewBox[3] - newHeight) / 2;
+            svg.setAttribute(
+              "viewBox",
+              `${newX} ${newY} ${newWidth} ${newHeight}`
+            );
+            this.updateZoomPercentage();
+            this.updateMinimapViewport();
+          });
+
+          document
+            .getElementById("zoomOutBtn")
+            .addEventListener("click", () => {
+              const svg = document.getElementById("diagram");
+              const viewBox = svg
+                .getAttribute("viewBox")
+                .split(" ")
+                .map(Number);
+              const scale = 1.05; // 5% larger
+              const newWidth = viewBox[2] * scale;
+              const newHeight = viewBox[3] * scale;
+              const newX = viewBox[0] - (newWidth - viewBox[2]) / 2;
+              const newY = viewBox[1] - (newHeight - viewBox[3]) / 2;
+              svg.setAttribute(
+                "viewBox",
+                `${newX} ${newY} ${newWidth} ${newHeight}`
+              );
+              this.updateZoomPercentage();
+              this.updateMinimapViewport();
+            });
+
           this.expandTopLevelNodes();
           this.buildDiagram();
           this.buildMinimap(); // Build the minimap after diagram is built
+          this.updateZoomPercentage(); // Initialize zoom percentage display
+
           window.addEventListener(
             "resize",
             Utils.debounce(() => {
@@ -1178,12 +1278,25 @@
             }, 200)
           );
         },
+        updateZoomPercentage: function () {
+          const svg = document.getElementById("diagram");
+          const defaultWidth = 800; // Default width (based on initial viewBox setting)
+          const viewBox = svg.getAttribute("viewBox").split(" ").map(Number);
+          const currentWidth = viewBox[2];
+          const zoomPercent = (defaultWidth / currentWidth) * 100;
+          document.getElementById("zoomPercentage").innerHTML =
+            zoomPercent.toFixed(0) + "%";
+        },
         setupTooltip: function () {
           this.tooltip = document.getElementById("diagram-tooltip");
           const diagram = document.getElementById("diagram");
           diagram.addEventListener("mousemove", (e) => {
             this.tooltip.style.left = e.pageX + 10 + "px";
             this.tooltip.style.top = e.pageY + 10 + "px";
+            console.log(
+              (this.tooltip.style.top = e.pageY + 10 + "px"),
+              (this.tooltip.style.left = e.pageX + 10 + "px")
+            );
           });
         },
         setupPan: function () {
@@ -1227,6 +1340,17 @@
           const svg = document.getElementById("diagram");
           svg.setAttribute("viewBox", "0 0 1200 800");
           this.updateMinimapViewport();
+          this.updateZoomPercentage();
+        },
+        // Reset the diagram to its initial state: reset viewBox and clear expanded nodes
+        resetDiagram: function () {
+          const svg = document.getElementById("diagram");
+          svg.setAttribute("viewBox", "30 30 800 600");
+          this.expandedMains.clear();
+          this.expandTopLevelNodes();
+          this.buildDiagram();
+          this.buildMinimap();
+          this.updateZoomPercentage();
         },
         expandTopLevelNodes: function () {
           DataManager.steps.forEach((step) => {
@@ -1616,61 +1740,60 @@
           this.buildDiagram();
           this.buildMinimap();
         },
-      };
-    </script>
-    <script>
-      // Additional DiagramView functions for minimap functionality
-      DiagramView.buildMinimap = function () {
-        const scaleFactor = 0.2; // Scale factor for the minimap
-        const mainSvg = document.getElementById("diagram");
-        const minimapSvg = document.getElementById("minimap");
-        // Clear the minimap SVG content
-        while (minimapSvg.firstChild) {
-          minimapSvg.removeChild(minimapSvg.firstChild);
-        }
-        // Add the viewport rectangle (to be updated later)
-        const viewportRect = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "rect"
-        );
-        viewportRect.setAttribute("id", "minimap-viewport");
-        viewportRect.setAttribute("fill", "none");
-        viewportRect.setAttribute("stroke", "red");
-        viewportRect.setAttribute("stroke-width", "2");
-        minimapSvg.appendChild(viewportRect);
-        // Draw scaled-down nodes on the minimap
-        const visibleNodes = DiagramView.getVisibleNodes();
-        visibleNodes.forEach((node) => {
-          const scaledX = node.x * scaleFactor;
-          const scaledY = node.y * scaleFactor;
-          const scaledWidth = 120 * scaleFactor;
-          const scaledHeight = 40 * scaleFactor;
-          const rect = document.createElementNS(
+        buildMinimap: function () {
+          const scaleFactor = 0.2; // Scale factor for the minimap
+          const mainSvg = document.getElementById("diagram");
+          const minimapSvg = document.getElementById("minimap");
+          // Clear the minimap SVG content
+          while (minimapSvg.firstChild) {
+            minimapSvg.removeChild(minimapSvg.firstChild);
+          }
+          // Add the viewport rectangle (to be updated later)
+          const viewportRect = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "rect"
           );
-          rect.setAttribute("x", scaledX);
-          rect.setAttribute("y", scaledY);
-          rect.setAttribute("width", scaledWidth);
-          rect.setAttribute("height", scaledHeight);
-          rect.setAttribute("fill", "#1483f3");
-          rect.setAttribute("stroke", "#606060");
-          rect.setAttribute("stroke-width", "1");
-          minimapSvg.appendChild(rect);
-        });
-        // Update the viewport rectangle based on the main diagram's viewBox
-        this.updateMinimapViewport();
-      };
-
-      DiagramView.updateMinimapViewport = function () {
-        const scaleFactor = 0.2;
-        const mainSvg = document.getElementById("diagram");
-        const viewBox = mainSvg.getAttribute("viewBox").split(" ").map(Number);
-        const minimapViewport = document.getElementById("minimap-viewport");
-        minimapViewport.setAttribute("x", viewBox[0] * scaleFactor);
-        minimapViewport.setAttribute("y", viewBox[1] * scaleFactor);
-        minimapViewport.setAttribute("width", viewBox[2] * scaleFactor);
-        minimapViewport.setAttribute("height", viewBox[3] * scaleFactor);
+          viewportRect.setAttribute("id", "minimap-viewport");
+          viewportRect.setAttribute("fill", "none");
+          viewportRect.setAttribute("stroke", "red");
+          viewportRect.setAttribute("stroke-width", "2");
+          minimapSvg.appendChild(viewportRect);
+          // Draw scaled-down nodes on the minimap
+          const visibleNodes = this.getVisibleNodes();
+          visibleNodes.forEach((node) => {
+            const scaledX = node.x * scaleFactor;
+            const scaledY = node.y * scaleFactor;
+            const scaledWidth = 120 * scaleFactor;
+            const scaledHeight = 40 * scaleFactor;
+            const rect = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "rect"
+            );
+            rect.setAttribute("x", scaledX);
+            rect.setAttribute("y", scaledY);
+            rect.setAttribute("width", scaledWidth);
+            rect.setAttribute("height", scaledHeight);
+            rect.setAttribute("fill", "#1483f3");
+            rect.setAttribute("stroke", "#606060");
+            rect.setAttribute("stroke-width", "1");
+            minimapSvg.appendChild(rect);
+          });
+          // Update the viewport rectangle based on the main diagram's viewBox
+          this.updateMinimapViewport();
+        },
+        updateMinimapViewport: function () {
+          const scaleFactor = 0.2;
+          const mainSvg = document.getElementById("diagram");
+          const viewBox = mainSvg
+            .getAttribute("viewBox")
+            .split(" ")
+            .map(Number);
+          const minimapViewport = document.getElementById("minimap-viewport");
+          minimapViewport.setAttribute("x", viewBox[0] * scaleFactor);
+          minimapViewport.setAttribute("y", viewBox[1] * scaleFactor);
+          minimapViewport.setAttribute("width", viewBox[2] * scaleFactor);
+          minimapViewport.setAttribute("height", viewBox[3] * scaleFactor);
+        },
       };
     </script>
   </body>
