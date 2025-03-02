@@ -58,27 +58,32 @@
         border-radius: 4px;
         cursor: pointer;
       }
-      .zoom-percentage {
+      .zoom-controls-container {
         position: absolute;
         top: 217px;
-        left: 500px;
+        right: 20px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
         z-index: 1200;
+      }
+      .zoom-percentage {
         background-color: rgba(0, 0, 0, 0.5);
         color: white;
         padding: 5px 8px;
         border-radius: 4px;
         font-size: 14px;
+        margin-right: 10px;
+        margin-left: 10px;
       }
       .zoom-btn {
-        position: absolute;
-        top: 217px;
-        z-index: 1100;
         padding: 5px 10px;
         background-color: #1483f3;
         color: white;
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        margin-left: 1px;
       }
 
       /* Positioning: for example, the plus will be next to center/reset, and minus will be next to it */
@@ -342,11 +347,16 @@
         <!-- Center Diagram Button -->
         <button class="center-btn" id="centerBtn">Center Diagram</button>
         <button class="reset-btn" id="resetBtn">↺</button>
-        <button id="zoomInBtn" class="zoom-btn">+</button>
-        <button id="zoomOutBtn" class="zoom-btn">–</button>
+        <!-- <button id="zoomInBtn" class="zoom-btn">+</button> -->
+        <!-- <button id="zoomOutBtn" class="zoom-btn">–</button> -->
 
         <!-- New element for zoom percentage -->
-        <div id="zoomPercentage" class="zoom-percentage">100%</div>
+        <div class="zoom-controls-container">
+          <button id="zoomOutBtn" class="zoom-btn">–</button>
+          <div id="zoomPercentage" class="zoom-percentage">100%</div>
+
+          <button id="zoomInBtn" class="zoom-btn">+</button>
+        </div>
         <!-- Drag Hint Overlay -->
         <!--<div class="drag-hint">Drag to pan diagram</div> -->
         <!-- Main SVG Diagram -->
