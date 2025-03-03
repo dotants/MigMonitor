@@ -85,15 +85,7 @@
         cursor: pointer;
         margin-left: 1px;
       }
-
-      /* Positioning: for example, the plus will be next to center/reset, and minus will be next to it */
-      #zoomInBtn {
-        right: 42px;
-      }
-      #zoomOutBtn {
-        right: 142px;
-      }
-      /* Drag hint overlay to inform the user they can drag the diagram */
+      /* Drag hint overlay */
       .drag-hint {
         position: absolute;
         top: 210px;
@@ -106,7 +98,7 @@
         z-index: 1100;
         font-size: 12px;
       }
-      /* Minimap container in the bottom-right corner */
+      /* Minimap container */
       .minimap-container {
         position: absolute;
         top: 50px;
@@ -179,9 +171,13 @@
         background-color: #3382d1;
         color: #fff;
         font-weight: bold;
+        border-top: 2px solid #000000 !important;
+        border-left: 2px solid #000000 !important;
+        border-right: 2px solid #000000 !important;
       }
-      .separator-row {
-        background-color: #f2f2f2;
+      .sub-header th {
+        border-top: 0px solid #000000 !important;
+        border-bottom: 0px solid #000000 !important;
       }
       .spacer-row td {
         border: none;
@@ -206,9 +202,35 @@
       .main-row.expandable.expanded td:first-child::before {
         transform: translateY(-50%) rotate(90deg);
       }
+      /* Selected main row styling */
+      .main-row.selected td {
+        border-top: 0px solid #000000 !important;
+        border-bottom: 0px solid #000000 !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
+      .main-row.selected td:first-child {
+        border-left: 0px solid #000000 !important;
+      }
+      .main-row.selected td:last-child {
+        border-right: 0px solid #000000 !important;
+      }
+      /* Sub-process row styling */
+      .sub-process td {
+        border-top: 0px solid #000000 !important;
+        border-bottom: 0px solid #000000 !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
       .sub-process td:first-child {
+        border-left: 2px solid #000000 !important;
         padding-left: 25px;
-        border: 1px solid #000000;
+      }
+      .sub-process td:last-child {
+        border-right: 2px solid #000000 !important;
+      }
+      .sub-process:last-of-type td {
+        border-bottom: 2px solid #000000 !important;
       }
       .hierarchy-indicator {
         display: inline-block;
@@ -286,6 +308,15 @@
         transition: opacity 0.3s;
         z-index: 1000;
       }
+      /* Update Notification Bubble styling */
+      .update-notification {
+        font-size: 12px;
+        background-color: yellow;
+        color: black;
+        padding: 5px 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      }
       @media (max-width: 768px) {
         .container {
           flex-direction: column;
@@ -313,6 +344,19 @@
         100% {
           transform: rotate(360deg);
         }
+      }
+      /* Styles for the new subrows container */
+      .subrows-container {
+        background-color: #e9e9ff; /* Example background */
+      }
+      .subrows-wrapper {
+        padding: 10px;
+        border: 1px solid #ccc;
+        overflow-x: auto;
+      }
+      .subrows-table {
+        width: 100%;
+        border-collapse: collapse;
       }
     </style>
   </head>
@@ -347,18 +391,14 @@
         <!-- Center Diagram Button -->
         <button class="center-btn" id="centerBtn">Center Diagram</button>
         <button class="reset-btn" id="resetBtn">↺</button>
-        <!-- <button id="zoomInBtn" class="zoom-btn">+</button> -->
-        <!-- <button id="zoomOutBtn" class="zoom-btn">–</button> -->
-
-        <!-- New element for zoom percentage -->
+        <!-- Zoom Controls -->
         <div class="zoom-controls-container">
           <button id="zoomOutBtn" class="zoom-btn">–</button>
           <div id="zoomPercentage" class="zoom-percentage">100%</div>
-
           <button id="zoomInBtn" class="zoom-btn">+</button>
         </div>
-        <!-- Drag Hint Overlay -->
-        <!--<div class="drag-hint">Drag to pan diagram</div> -->
+        <!-- (Optional) Drag Hint Overlay -->
+        <!-- <div class="drag-hint">Drag to pan diagram</div> -->
         <!-- Main SVG Diagram -->
         <svg
           id="diagram"
@@ -374,7 +414,6 @@
             viewBox="0 0 400 300"
             style="width: 100%; height: 100%"
           ></svg>
-          <!-- The viewport rectangle on the minimap -->
           <rect
             id="minimap-viewport"
             x="0"
@@ -388,7 +427,6 @@
         </div>
       </div>
     </div>
-
     <!-- k2api configuration and navigation setup -->
     <script>
       window.onload = function () {
@@ -410,10 +448,8 @@
         DataManager.init();
       };
     </script>
-
     <!-- Utility Functions -->
     <script>
-      // Utility functions with comments in English
       const Utils = {
         safeJsonParse: function (str, fallback) {
           try {
@@ -451,14 +487,12 @@
         },
       };
     </script>
-
     <!-- Data Manager Module -->
     <script>
       const DataManager = {
         steps: [],
         responses: {},
         execId: 0,
-        // Initialize data, table, diagram and refresh intervals
         init: async function () {
           try {
             Utils.hideError();
@@ -622,7 +656,8 @@
               this.steps
             );
             this.responses = updatedResponses;
-            TableView.init();
+            // Instead of rebuilding the table entirely, update all rows
+            TableView.updateAllRows();
             DiagramView.update();
             console.log("Full data refresh complete");
           } catch (error) {
@@ -856,7 +891,6 @@
         },
       };
     </script>
-
     <!-- Table View Module -->
     <script>
       const TableView = {
@@ -939,15 +973,19 @@
             pendingCell.textContent = parsedMain.pending;
             mainRow.appendChild(pendingCell);
             if (main.subSteps && main.subSteps.length > 0) {
-              mainRow.addEventListener("click", () => {
+              mainRow.addEventListener("click", (e) => {
                 const id = mainRow.getAttribute("data-main-row-id");
                 this.toggleRowExpansion(id, mainRow);
+                this.toggleSelectedRow(mainRow);
               });
             } else {
-              mainRow.style.cursor = "default";
+              mainRow.addEventListener("click", () => {
+                this.toggleSelectedRow(mainRow);
+              });
             }
             tableBody.appendChild(mainRow);
             if (main.subSteps && main.subSteps.length > 0) {
+              // Call the new addSubRows function to add the subrows container
               this.addSubRows(tableBody, main, parsedMain, mainRowCounter);
             }
           }
@@ -964,6 +1002,7 @@
           if (status === "pending") return "status-pending";
           return "status-default";
         },
+        // Updated addSubRows function that wraps sub-rows in a container row and cell.
         addSubRows: function (tableBody, main, parsedMain, mainRowCounter) {
           console.log(
             `Adding sub-rows for ${main["Step Name"]} with ${
@@ -971,24 +1010,50 @@
             } subProcesses`
           );
           const isExpanded = this.expandedRows.has(mainRowCounter.toString());
-          const displayStyle = isExpanded ? "table-row" : "none";
+          // Get the main row element by its data-main-row-id attribute
           const mainRow = tableBody.querySelector(
             `tr[data-main-row-id="${mainRowCounter}"]`
           );
           if (!mainRow) return;
-          const subRowsContainer = document.createElement("tbody");
-          const subHeaderRow = document.createElement("tr");
-          subHeaderRow.classList.add("sub-header");
-          subHeaderRow.setAttribute("data-parent-id", mainRowCounter);
-          subHeaderRow.style.display = displayStyle;
-          subHeaderRow.innerHTML = `
+
+          // Create a new table row to serve as the container for all sub-rows.
+          const containerRow = document.createElement("tr");
+          containerRow.classList.add("subrows-container");
+          // Set a data attribute to associate this container with the main row
+          containerRow.setAttribute("data-parent-id", mainRowCounter);
+          // Show or hide the container row based on whether the main row is expanded
+          containerRow.style.display = isExpanded ? "table-row" : "none";
+
+          // Create a table cell that spans all columns (5 columns in this case)
+          const containerCell = document.createElement("td");
+          containerCell.setAttribute("colspan", "5");
+
+          // Create a div wrapper for custom styling of sub-rows
+          const wrapperDiv = document.createElement("div");
+          wrapperDiv.classList.add("subrows-wrapper");
+
+          // Create an inner table to display sub-header and sub-rows in a table layout
+          const innerTable = document.createElement("table");
+          innerTable.classList.add("subrows-table");
+
+          // Create the sub-header for the inner table
+          const subHeader = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+          headerRow.classList.add("sub-header");
+          headerRow.innerHTML = `
             <th>Name</th>
             <th>Completed</th>
             <th>Rejected</th>
             <th>In Process</th>
             <th>Pending</th>
           `;
-          subRowsContainer.appendChild(subHeaderRow);
+          subHeader.appendChild(headerRow);
+          innerTable.appendChild(subHeader);
+
+          // Create tbody for the inner table where sub-rows will be added
+          const innerTbody = document.createElement("tbody");
+
+          // Loop through each sub-step of the main process
           main.subSteps.forEach((sub) => {
             let parsedSub = null;
             if (sub["API Name"] && DataManager.responses[sub["API Name"]]) {
@@ -1028,21 +1093,17 @@
                 pending: "0",
               };
             }
+
             const statusClass = this.getStatusClass(parsedSub);
             const subRow = document.createElement("tr");
             subRow.classList.add("sub-process");
-            subRow.setAttribute("data-parent-id", mainRowCounter);
             if (sub["API Name"]) {
               subRow.setAttribute("data-api-name", sub["API Name"]);
             }
-            subRow.style.display = displayStyle;
+            // Create cells for each column in the sub-row
             const nameCell = document.createElement("td");
             const nameContainer = document.createElement("div");
             nameContainer.className = "cell-container";
-            /*if (
-              parsedSub.name.includes("SF") ||
-              parsedSub.name.includes("DS")
-            ) {*/
             const verticalLine = document.createElement("span");
             verticalLine.style.display = "inline-block";
             verticalLine.style.width = "3px";
@@ -1051,7 +1112,6 @@
             verticalLine.style.marginRight = "6px";
             verticalLine.style.flexShrink = "0";
             nameContainer.appendChild(verticalLine);
-            // }
             const statusSpan = document.createElement("span");
             statusSpan.className = `status-indicator ${statusClass}`;
             statusSpan.style.flexShrink = "0";
@@ -1063,49 +1123,43 @@
             nameContainer.appendChild(nameSpan);
             nameCell.appendChild(nameContainer);
             const completedCell = document.createElement("td");
-            completedCell.style.border = "1px solid #000000";
             completedCell.textContent = parsedSub.completed;
+            //completedCell.style.borderBottom = "2px solid #000000";
             const rejectedCell = document.createElement("td");
-            rejectedCell.style.border = "1px solid #000000";
             rejectedCell.textContent = parsedSub.rejected;
             const inProcessCell = document.createElement("td");
-            inProcessCell.style.border = "1px solid #000000";
             inProcessCell.textContent = parsedSub.inProcess;
             const pendingCell = document.createElement("td");
-            pendingCell.style.border = "1px solid #000000";
             pendingCell.textContent = parsedSub.pending;
+
+            // Append all cells to the sub-row
             subRow.appendChild(nameCell);
             subRow.appendChild(completedCell);
             subRow.appendChild(rejectedCell);
             subRow.appendChild(inProcessCell);
             subRow.appendChild(pendingCell);
-            subRowsContainer.appendChild(subRow);
+
+            // Add click event for row selection
+            subRow.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.toggleSelectedRow(subRow);
+            });
+
+            // Append the sub-row to the inner table body
+            innerTbody.appendChild(subRow);
           });
-          const separatorRow = document.createElement("tr");
-          //separatorRow.classList.add("separator-row");
-          //separatorRow.setAttribute("data-parent-id", mainRowCounter);
-          //separatorRow.style.display = displayStyle;
-          //separatorRow.innerHTML = `<td colspan="5"></td>`;
-          //subRowsContainer.appendChild(separatorRow);
-          const spacerRow = document.createElement("tr");
-          //spacerRow.classList.add("spacer-row");
-          //spacerRow.setAttribute("data-parent-id", mainRowCounter);
-          //spacerRow.style.display = displayStyle;
-          //spacerRow.innerHTML = `<td colspan="5"></td>`;
-          //subRowsContainer.appendChild(spacerRow);
+
+          // Assemble the inner table and wrapper
+          innerTable.appendChild(innerTbody);
+          wrapperDiv.appendChild(innerTable);
+          containerCell.appendChild(wrapperDiv);
+          containerRow.appendChild(containerCell);
+
+          // Insert the container row immediately after the main row
           if (mainRow.nextSibling) {
-            tableBody.insertBefore(subRowsContainer, mainRow.nextSibling);
+            tableBody.insertBefore(containerRow, mainRow.nextSibling);
           } else {
-            tableBody.appendChild(subRowsContainer);
-          }
-          while (subRowsContainer.firstChild) {
-            tableBody.insertBefore(
-              subRowsContainer.firstChild,
-              subRowsContainer
-            );
-          }
-          if (subRowsContainer.parentNode) {
-            subRowsContainer.parentNode.removeChild(subRowsContainer);
+            tableBody.appendChild(containerRow);
           }
         },
         toggleRowExpansion: function (rowId, mainRow) {
@@ -1192,6 +1246,8 @@
               mainRowId
             );
           }
+          // Show update notification bubble with current time
+          //this.showUpdateNotification(mainRow);
         },
         mergeSubProcesses: function (oldSubProcesses, newSubProcesses) {
           console.log(
@@ -1216,6 +1272,74 @@
           console.log("Merged subprocesses count:", merged.length);
           return merged;
         },
+        toggleSelectedRow: function (row) {
+          const isMainRow = row.classList.contains("main-row");
+          const isSubProcess = row.classList.contains("sub-process");
+          if (isMainRow) {
+            document
+              .querySelectorAll(".main-row.selected")
+              .forEach((selectedRow) => {
+                if (selectedRow !== row) {
+                  selectedRow.classList.remove("selected");
+                }
+              });
+          } else if (isSubProcess) {
+            document
+              .querySelectorAll(".sub-process.selected")
+              .forEach((selectedRow) => {
+                if (selectedRow !== row) {
+                  selectedRow.classList.remove("selected");
+                }
+              });
+          }
+          row.classList.toggle("selected");
+        },
+        // New function to update all rows without rebuilding the table completely
+        updateAllRows: function () {
+          DataManager.steps.forEach((step) => {
+            if (step["API Name"]) {
+              TableView.updateTableRowForStep(
+                step,
+                DataManager.responses[step["API Name"]]
+              );
+            }
+          });
+        },
+        // New function: shows a bubble notification on the given row with the current time
+        showUpdateNotification: function (row) {
+          // Create the bubble element
+          var bubble = document.createElement("div");
+          bubble.className = "update-notification";
+          var now = new Date();
+          var timeString =
+            now.getHours().toString().padStart(2, "0") +
+            ":" +
+            now.getMinutes().toString().padStart(2, "0") +
+            ":" +
+            now.getSeconds().toString().padStart(2, "0");
+          bubble.textContent = "updated in -" + timeString;
+          // Style the bubble (if not already styled via CSS)
+          bubble.style.position = "absolute";
+          bubble.style.top = "0";
+          bubble.style.right = "0";
+          bubble.style.backgroundColor = "gray";
+          bubble.style.color = "white";
+          bubble.style.padding = "5px 10px";
+          bubble.style.borderRadius = "5px";
+          bubble.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
+          bubble.style.zIndex = "1000";
+          // Ensure the row is relatively positioned
+          row.style.position = "relative";
+          row.appendChild(bubble);
+          // After 3 seconds, fade out the bubble over 2 seconds, then remove it
+          setTimeout(function () {
+            bubble.style.transition = "opacity 2s";
+            bubble.style.opacity = "0";
+            setTimeout(function () {
+              row.removeChild(bubble);
+            }, 2000);
+          }, 3000);
+        },
       };
     </script>
     <!-- Diagram View Module with minimap functionality -->
@@ -1225,23 +1349,17 @@
         nodeLookup: {},
         init: function () {
           this.setupTooltip();
-          this.setupPan(); // Enable mouse panning
-
-          // Attach event listener to the reset button
+          this.setupPan();
           document.getElementById("resetBtn").addEventListener("click", () => {
             this.resetDiagram();
           });
-
-          // Center Diagram button event listener
           document.getElementById("centerBtn").addEventListener("click", () => {
             this.centerDiagram();
           });
-
-          // Add zoom button event listeners (properly scoped)
           document.getElementById("zoomInBtn").addEventListener("click", () => {
             const svg = document.getElementById("diagram");
             const viewBox = svg.getAttribute("viewBox").split(" ").map(Number);
-            const scale = 0.95; // 5% smaller
+            const scale = 0.95;
             const newWidth = viewBox[2] * scale;
             const newHeight = viewBox[3] * scale;
             const newX = viewBox[0] + (viewBox[2] - newWidth) / 2;
@@ -1253,7 +1371,6 @@
             this.updateZoomPercentage();
             this.updateMinimapViewport();
           });
-
           document
             .getElementById("zoomOutBtn")
             .addEventListener("click", () => {
@@ -1262,7 +1379,7 @@
                 .getAttribute("viewBox")
                 .split(" ")
                 .map(Number);
-              const scale = 1.05; // 5% larger
+              const scale = 1.05;
               const newWidth = viewBox[2] * scale;
               const newHeight = viewBox[3] * scale;
               const newX = viewBox[0] - (newWidth - viewBox[2]) / 2;
@@ -1274,12 +1391,10 @@
               this.updateZoomPercentage();
               this.updateMinimapViewport();
             });
-
           this.expandTopLevelNodes();
           this.buildDiagram();
-          this.buildMinimap(); // Build the minimap after diagram is built
-          this.updateZoomPercentage(); // Initialize zoom percentage display
-
+          this.buildMinimap();
+          this.updateZoomPercentage();
           window.addEventListener(
             "resize",
             Utils.debounce(() => {
@@ -1290,7 +1405,7 @@
         },
         updateZoomPercentage: function () {
           const svg = document.getElementById("diagram");
-          const defaultWidth = 800; // Default width (based on initial viewBox setting)
+          const defaultWidth = 800;
           const viewBox = svg.getAttribute("viewBox").split(" ").map(Number);
           const currentWidth = viewBox[2];
           const zoomPercent = (defaultWidth / currentWidth) * 100;
@@ -1303,10 +1418,6 @@
           diagram.addEventListener("mousemove", (e) => {
             this.tooltip.style.left = e.pageX + 10 + "px";
             this.tooltip.style.top = e.pageY + 10 + "px";
-            console.log(
-              (this.tooltip.style.top = e.pageY + 10 + "px"),
-              (this.tooltip.style.left = e.pageX + 10 + "px")
-            );
           });
         },
         setupPan: function () {
@@ -1352,7 +1463,6 @@
           this.updateMinimapViewport();
           this.updateZoomPercentage();
         },
-        // Reset the diagram to its initial state: reset viewBox and clear expanded nodes
         resetDiagram: function () {
           const svg = document.getElementById("diagram");
           svg.setAttribute("viewBox", "30 30 800 600");
@@ -1462,8 +1572,6 @@
           visibleNodes.forEach((d) => {
             mapVisible[d["Step Number"]] = d;
           });
-          const SVG_WIDTH = svg.clientWidth;
-          const SVG_HEIGHT = svg.clientHeight;
           const defs = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "defs"
@@ -1494,7 +1602,6 @@
         computeLayout: function (visibleData) {
           const svg = document.getElementById("diagram");
           const SVG_WIDTH = svg.clientWidth;
-          const SVG_HEIGHT = svg.clientHeight;
           const NODE_WIDTH = 120;
           const NODE_HEIGHT = 40;
           const LEVEL_VERTICAL_SPACING = 100;
@@ -1751,14 +1858,12 @@
           this.buildMinimap();
         },
         buildMinimap: function () {
-          const scaleFactor = 0.2; // Scale factor for the minimap
+          const scaleFactor = 0.2;
           const mainSvg = document.getElementById("diagram");
           const minimapSvg = document.getElementById("minimap");
-          // Clear the minimap SVG content
           while (minimapSvg.firstChild) {
             minimapSvg.removeChild(minimapSvg.firstChild);
           }
-          // Add the viewport rectangle (to be updated later)
           const viewportRect = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "rect"
@@ -1768,7 +1873,6 @@
           viewportRect.setAttribute("stroke", "red");
           viewportRect.setAttribute("stroke-width", "2");
           minimapSvg.appendChild(viewportRect);
-          // Draw scaled-down nodes on the minimap
           const visibleNodes = this.getVisibleNodes();
           visibleNodes.forEach((node) => {
             const scaledX = node.x * scaleFactor;
@@ -1788,7 +1892,6 @@
             rect.setAttribute("stroke-width", "1");
             minimapSvg.appendChild(rect);
           });
-          // Update the viewport rectangle based on the main diagram's viewBox
           this.updateMinimapViewport();
         },
         updateMinimapViewport: function () {
