@@ -36,6 +36,7 @@ stages:
             external: listLength
         out:
           value:
+            external: listLength
             schema: integer
   Stage 2:
     actors:
