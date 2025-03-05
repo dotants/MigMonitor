@@ -46,6 +46,7 @@
         border-radius: 4px;
         cursor: pointer;
       }
+      /* Reset Diagram Button */
       .reset-btn {
         position: absolute;
         top: 12px;
@@ -58,6 +59,7 @@
         border-radius: 4px;
         cursor: pointer;
       }
+      /* Zoom controls container */
       .zoom-controls-container {
         position: absolute;
         top: 217px;
@@ -67,6 +69,7 @@
         align-items: center;
         z-index: 1200;
       }
+      /* Zoom percentage display */
       .zoom-percentage {
         background-color: rgba(0, 0, 0, 0.5);
         color: white;
@@ -76,6 +79,7 @@
         margin-right: 10px;
         margin-left: 10px;
       }
+      /* Zoom buttons */
       .zoom-btn {
         padding: 5px 10px;
         background-color: #1483f3;
@@ -85,7 +89,7 @@
         cursor: pointer;
         margin-left: 1px;
       }
-      /* Drag hint overlay */
+      /* Drag hint overlay (optional) */
       .drag-hint {
         position: absolute;
         top: 210px;
@@ -327,6 +331,7 @@
           width: 100%;
         }
       }
+      /* Spinner styling for loading indication */
       .spinner {
         border: 4px solid rgba(0, 0, 0, 0.1);
         width: 24px;
@@ -390,6 +395,7 @@
       <div class="diagram-container">
         <!-- Center Diagram Button -->
         <button class="center-btn" id="centerBtn">Center Diagram</button>
+        <!-- Reset Diagram Button -->
         <button class="reset-btn" id="resetBtn">↺</button>
         <!-- Zoom Controls -->
         <div class="zoom-controls-container">
@@ -406,6 +412,7 @@
           preserveAspectRatio="xMidYMid meet"
           style="width: 100%; height: 100%"
         ></svg>
+        <!-- Tooltip for diagram nodes -->
         <div class="tooltip" id="diagram-tooltip"></div>
         <!-- Minimap Container -->
         <div class="minimap-container">
@@ -440,15 +447,11 @@
             },
           };
         }
-        window.k2api.setNavigationMenu([
-          { name: "Main", path: "/index.html" },
-          { name: "Table", path: "/table5.html" },
-          { name: "Diagram", path: "/table6.html" },
-        ]);
+        window.k2api.setNavigationMenu([{ name: "Main", path: "/index.html" }]);
         DataManager.init();
       };
     </script>
-    <!-- Utility Functions -->
+    <!-- Utility Functions Module -->
     <script>
       const Utils = {
         safeJsonParse: function (str, fallback) {
@@ -1002,7 +1005,7 @@
           if (status === "pending") return "status-pending";
           return "status-default";
         },
-        // Updated addSubRows function that wraps sub-rows in a container row and cell.
+        /* Updated addSubRows function that wraps sub-rows in a container row and cell. */
         addSubRows: function (tableBody, main, parsedMain, mainRowCounter) {
           console.log(
             `Adding sub-rows for ${main["Step Name"]} with ${
@@ -1124,6 +1127,7 @@
             nameCell.appendChild(nameContainer);
             const completedCell = document.createElement("td");
             completedCell.textContent = parsedSub.completed;
+            // Uncomment the following line to add a border to the completed cell
             //completedCell.style.borderBottom = "2px solid #000000";
             const rejectedCell = document.createElement("td");
             rejectedCell.textContent = parsedSub.rejected;
@@ -1246,8 +1250,8 @@
               mainRowId
             );
           }
-          // Show update notification bubble with current time
-          //this.showUpdateNotification(mainRow);
+          // Optionally show an update notification bubble with current time
+          // this.showUpdateNotification(mainRow);
         },
         mergeSubProcesses: function (oldSubProcesses, newSubProcesses) {
           console.log(
@@ -1294,7 +1298,7 @@
           }
           row.classList.toggle("selected");
         },
-        // New function to update all rows without rebuilding the table completely
+        /* New function to update all rows without rebuilding the table completely */
         updateAllRows: function () {
           DataManager.steps.forEach((step) => {
             if (step["API Name"]) {
@@ -1305,9 +1309,9 @@
             }
           });
         },
-        // New function: shows a bubble notification on the given row with the current time
+        /* New function: shows a bubble notification on the given row with the current time */
         showUpdateNotification: function (row) {
-          // Create the bubble element
+          // Create the notification bubble element
           var bubble = document.createElement("div");
           bubble.className = "update-notification";
           var now = new Date();
