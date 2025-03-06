@@ -283,8 +283,8 @@
         background-color: #2ecc71;
       }
       .status-in-progress {
-        background-color: #2ecc71;
-        border: 1px dashed #27ae60;
+        background-color: #80ffb5;
+        border: 2px dashed #000000;
       }
       .status-pending {
         background-color: #ffffff;
@@ -1757,6 +1757,7 @@
             let strokeColor = "#606060";
             let strokeDashArray = "none";
             const parsedStatus = this.getNodeStatus(node);
+
             console.log(
               `Drawing node: ${node["Step Name"]}, Status: ${parsedStatus.status}`
             );
@@ -1785,12 +1786,20 @@
                 strokeColor = "#606060";
               }
             }
+
             rect.setAttribute("fill", fillColor);
             rect.setAttribute("stroke", strokeColor);
             rect.setAttribute("stroke-width", strokeWidth);
+
             if (strokeDashArray !== "none") {
               rect.setAttribute("stroke-dasharray", strokeDashArray);
             }
+            if (node.Type === "SUB") {
+              rect.style.fill = "#d2e6f9";
+            }
+
+            console.log("node.Type:", node.Type);
+
             g.appendChild(rect);
             const text = document.createElementNS(
               "http://www.w3.org/2000/svg",
@@ -1800,10 +1809,14 @@
             text.setAttribute("y", node.y + NODE_HEIGHT / 2 + 5);
             text.setAttribute("text-anchor", "middle");
             text.setAttribute("font-size", "12");
+
             if (fillColor === "#ffffff" || fillColor === "#f2f2f2") {
               text.setAttribute("fill", "#333333");
             } else {
               text.setAttribute("fill", "#ffffff");
+            }
+            if (node.Type === "SUB") {
+              text.style.fill = "#000000";
             }
             let stepName = node["Step Name"] || "";
             if (stepName.length > 15) {
@@ -1816,6 +1829,7 @@
                 e.stopPropagation();
                 this.toggleMainExpand(node["Step Number"]);
               });
+
               g.addEventListener("mouseenter", () => {
                 this.showNodeTooltip(node);
               });
