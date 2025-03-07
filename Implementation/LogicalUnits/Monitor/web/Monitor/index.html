@@ -261,6 +261,18 @@
         stroke-width: 4;
         cursor: pointer;
       }
+      .rotating-dash rect {
+        animation: dashAnimation 2s linear infinite;
+      }
+
+      @keyframes dashAnimation {
+        from {
+          stroke-dashoffset: 0;
+        }
+        to {
+          stroke-dashoffset: -20; /* ניתן לשנות את הערך בהתאם לאורך המסלול */
+        }
+      }
       .node text {
         fill: #ffffff;
         font-size: 12px;
@@ -283,8 +295,31 @@
         background-color: #2ecc71;
       }
       .status-in-progress {
+        position: relative;
         background-color: #80ffb5;
+        display: inline-block;
+        height: 10px;
+        width: 10px;
+      }
+      .status-in-progress::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
         border: 2px dashed #000000;
+        animation: rotate-border 2s linear infinite;
+        pointer-events: none;
+        border-radius: 10px;
+      }
+      @keyframes rotate-border {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
       .status-pending {
         background-color: #ffffff;
@@ -1775,6 +1810,7 @@
                 fillColor = "#2ecc71";
                 strokeColor = "#27ae60";
                 strokeDashArray = "5, 5";
+                g.classList.add("rotating-dash");
               } else if (status === "completed") {
                 fillColor = "#2ecc71";
                 strokeColor = "#27ae60";
