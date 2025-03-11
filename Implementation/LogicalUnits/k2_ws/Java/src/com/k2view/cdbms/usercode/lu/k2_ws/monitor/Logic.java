@@ -123,6 +123,12 @@ public class Logic extends WebServiceUserCode {
 		return fabric().fetch("broadway MigDummy.s3LoadStatus execId='"+execId+"' wsName='wsS3P2Status'");
 	}
 
+
+	@webService(path = "", verb = {MethodType.GET}, version = "1", isRaw = false, isCustomPayload = false, produce = {Produce.XML, Produce.JSON}, elevatedPermission = false)
+	public static Object wsBatchStatus(@param(required=true) String filter, @param(required=true) String name) throws Exception {
+		return fabric().fetch("broadway MigDummy.batchStatus  filterText='"+filter+"' name='"+name+"'");
+	}
+
 	
 	
 

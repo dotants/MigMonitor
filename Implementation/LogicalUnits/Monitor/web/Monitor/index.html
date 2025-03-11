@@ -482,7 +482,11 @@
             },
           };
         }
-        window.k2api.setNavigationMenu([{ name: "Main", path: "/index.html" }]);
+        window.k2api.setNavigationMenu([
+          { name: "Main", path: "/index.html" },
+          { name: "test", path: "/table6.html" },
+          { name: "test2", path: "/test.html" },
+        ]);
         DataManager.init();
       };
     </script>
@@ -565,6 +569,7 @@
             this.execId = execId;
             document.getElementById("Exec_ID").innerHTML =
               "Run Number: " + this.execId;
+
             let steps;
             try {
               steps = await k2api.invokeFabricWebService(
@@ -577,6 +582,67 @@
                 : typeof steps === "object"
                 ? Object.values(steps)
                 : [];
+
+              // Process Batch steps first
+              for (const step of steps) {
+                if (step["Proces_type"] === "Batch") {
+                  console.log("Processing Batch API:", step["API Name"]);
+                  console.log("Step name:", step["Step Name"]);
+                  console.log("execId:", execId);
+                  console.log("Original Filter:", step["Filter"]);
+                  console.log("execId value:", execId);
+
+                  // Replace exec_id=${execId} with the actual execId value in the Filter
+                  const filterWithExecId = step["Filter"]
+                    .replace(/\u00A0/g, " ")
+                    .replace("${execId}", execId);
+
+                  // Check if the filter contains quotes
+                  console.log("Final Filter value:", filterWithExecId);
+                  console.log(
+                    "Filter contains double quotes:",
+                    filterWithExecId.includes('"')
+                  );
+                  console.log(
+                    "Filter contains single quotes:",
+                    filterWithExecId.includes("'")
+                  );
+                  console.log(
+                    "Filter contains non-breaking space:",
+                    filterWithExecId.includes("\u00A0")
+                  );
+                  console.log(
+                    "Filter hex dump:",
+                    Array.from(filterWithExecId)
+                      .map((c) => c.charCodeAt(0).toString(16))
+                      .join(" ")
+                  );
+
+                  try {
+                    const wsBatchStatus = await k2api.invokeFabricWebService(
+                      "wsBatchStatus",
+                      {
+                        token: "",
+                        filter: filterWithExecId + " ",
+                        name: step["Step Name"],
+                        format: "json",
+                      },
+                      "GET"
+                    );
+                    console.log(
+                      "Batch Status Response:",
+                      JSON.stringify(wsBatchStatus, null, 2)
+                    );
+                    // Store the batch status response in the responses object
+                    this.responses[step["API Name"]] = wsBatchStatus;
+                  } catch (batchError) {
+                    console.error(
+                      `Error fetching batch status for ${step["API Name"]}:`,
+                      batchError
+                    );
+                  }
+                }
+              }
             } catch (configError) {
               console.error("Steps configuration fetch failed:", configError);
               steps = [];
@@ -584,7 +650,15 @@
             if (steps.length === 0)
               throw new Error("No steps found in configuration");
             this.steps = steps;
-            this.responses = await this.fetchAllApiResponses(this.steps);
+
+            // Fetch responses for non-batch steps
+            const nonBatchResponses = await this.fetchAllApiResponses(
+              this.steps.filter((step) => step["Proces_type"] !== "Batch")
+            );
+
+            // Merge batch and non-batch responses
+            this.responses = { ...this.responses, ...nonBatchResponses };
+
             console.log("Loaded API responses:", this.responses);
             document.getElementById("loading").style.display = "none";
             document.getElementById("sfTable").style.display = "table";
@@ -724,22 +798,119 @@
                 console.error("Execution ID fetch failed:", execError);
                 execId = Date.now();
               }
-              this.execId = execId;
-              document.getElementById("Exec_ID").innerHTML =
-                "Run Number: " + this.execId;
-              console.log("Execution ID refresh complete: " + this.execId);
+
+              // If execId has changed, refresh all batch statuses immediately
+              if (execId !== this.execId) {
+                console.log("ExecId changed, refreshing batch statuses...");
+                this.execId = execId;
+                document.getElementById("Exec_ID").innerHTML =
+                  "Run Number: " + this.execId;
+
+                // Refresh all batch statuses with new execId
+                for (const step of this.steps) {
+                  if (step["Proces_type"] === "Batch") {
+                    console.log("Refreshing Batch API:", step["API Name"]);
+                    console.log("Step name:", step["Step Name"]);
+                    console.log("New execId:", execId);
+                    console.log("Original Filter:", step["Filter"]);
+
+                    // Replace exec_id=${execId} with the actual execId value in the Filter
+                    const filterWithExecId = step["Filter"]
+                      .replace(/\u00A0/g, " ")
+                      .replace("${execId}", execId);
+
+                    console.log("Final Filter value:", filterWithExecId);
+
+                    try {
+                      const wsBatchStatus = await k2api.invokeFabricWebService(
+                        "wsBatchStatus",
+                        {
+                          token: "",
+                          filter: filterWithExecId + " ",
+                          name: step["Step Name"],
+                          format: "json",
+                        },
+                        "GET"
+                      );
+                      console.log(
+                        "Batch Status Response:",
+                        JSON.stringify(wsBatchStatus, null, 2)
+                      );
+                      this.responses[step["API Name"]] = wsBatchStatus;
+                      TableView.updateTableRowForStep(step, wsBatchStatus);
+                      DiagramView.update();
+                    } catch (batchError) {
+                      console.error(
+                        `Error fetching batch status for ${step["API Name"]}:`,
+                        batchError
+                      );
+                    }
+                  }
+                }
+              } else {
+                console.log("ExecId unchanged:", execId);
+              }
             } catch (error) {
               console.error("Error during execution ID refresh:", error);
             }
           }, EXEC_ID_REFRESH_INTERVAL);
+
           const MASTER_REFRESH_INTERVAL = 30000;
-          setInterval(() => {
-            this.refreshAllData();
+          setInterval(async () => {
+            console.log("Performing master refresh...");
+            try {
+              // Refresh batch statuses
+              for (const step of this.steps) {
+                if (step["Proces_type"] === "Batch") {
+                  console.log("Refreshing Batch API:", step["API Name"]);
+                  const filterWithExecId = step["Filter"]
+                    .replace(/\u00A0/g, " ")
+                    .replace("${execId}", this.execId);
+
+                  try {
+                    const wsBatchStatus = await k2api.invokeFabricWebService(
+                      "wsBatchStatus",
+                      {
+                        token: "",
+                        filter: filterWithExecId + " ",
+                        name: step["Step Name"],
+                        format: "json",
+                      },
+                      "GET"
+                    );
+                    this.responses[step["API Name"]] = wsBatchStatus;
+                    TableView.updateTableRowForStep(step, wsBatchStatus);
+                  } catch (batchError) {
+                    console.error(
+                      `Error fetching batch status for ${step["API Name"]}:`,
+                      batchError
+                    );
+                  }
+                }
+              }
+
+              // Refresh non-batch APIs
+              const nonBatchResponses = await this.fetchAllApiResponses(
+                this.steps.filter((step) => step["Proces_type"] !== "Batch")
+              );
+              Object.assign(this.responses, nonBatchResponses);
+              TableView.updateAllRows();
+              DiagramView.update();
+            } catch (error) {
+              console.error("Error during master refresh:", error);
+            }
           }, MASTER_REFRESH_INTERVAL);
+
+          // Setup individual refresh intervals for non-batch steps
           this.steps.forEach((step) => {
-            if (step["API Name"] && step["Refresh interval"]) {
+            if (
+              step["API Name"] &&
+              step["Refresh interval"] &&
+              step["Proces_type"] !== "Batch"
+            ) {
               const interval = parseInt(step["Refresh interval"], 10) * 1000;
               if (isNaN(interval) || interval <= 0) return;
+
               setInterval(async () => {
                 try {
                   console.log(`Refreshing API: ${step["API Name"]}`);
@@ -749,7 +920,6 @@
                   this.responses[step["API Name"]] = updatedResponse;
                   TableView.updateTableRowForStep(step, updatedResponse);
                   DiagramView.update();
-                  console.log(`API refresh complete: ${step["API Name"]}`);
                 } catch (error) {
                   console.error(
                     `Error in refresh interval for ${step["API Name"]}:`,
